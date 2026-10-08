@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Web sitesindeki kurt simgesinin aynısı (512 birimlik çizim, güvenli alana küçültülmüş). -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="512"
+    android:viewportHeight="512">
+    <group android:pivotX="256" android:pivotY="256" android:scaleX="0.62" android:scaleY="0.62">
+        <path android:fillColor="#C3C2B7" android:pathData="M132,70 L214,178 L122,236 Z" />
+        <path android:fillColor="#C3C2B7" android:pathData="M380,70 L298,178 L390,236 Z" />
+        <path android:fillColor="#3987E5" android:pathData="M146,112 L196,182 L140,214 Z" />
+        <path android:fillColor="#3987E5" android:pathData="M366,112 L316,182 L372,214 Z" />
+        <path android:fillColor="#C3C2B7" android:pathData="M122,214 L200,168 L256,186 L312,168 L390,214 L380,302 L306,366 L256,446 L206,366 L132,302 Z" />
+        <path android:fillColor="#F0EFEC" android:pathData="M206,290 L256,270 L306,290 L284,380 L256,446 L228,380 Z" />
+        <path android:fillColor="#0D0D0D" android:pathData="M170,254 L226,262 L214,280 Z" />
+        <path android:fillColor="#0D0D0D" android:pathData="M342,254 L286,262 L298,280 Z" />
+        <path android:fillColor="#0D0D0D" android:pathData="M236,400 L276,400 L256,428 Z" />
+        <path android:fillColor="#3987E5" android:pathData="M404,334 A70,70 0 1,1 403.9,334 Z" />
+        <path android:fillColor="#FFFFFF" android:pathData="M404,446 L370,400 L392,400 L392,362 L416,362 L416,400 L438,400 Z" />
+    </group>
+</vector>

@@ -1,0 +1,58 @@
+-- Barkodu olmayan yaygın besinler (değerler 100 g için, YAKLAŞIKTIR).
+-- schema.sql'den sonra bir kez çalıştır. Tekrar çalıştırırsan aynı isimler eklenmez.
+insert into public.products (name, kcal_100g, protein_100g, carbs_100g, fat_100g, serving_g, source)
+select v.name, v.kcal, v.p, v.c, v.f, v.serving, 'tr-temel'
+from (values
+  ('Simit', 330, 10, 60, 5, 110),
+  ('Beyaz ekmek', 265, 9, 49, 3.2, 30),
+  ('Tam buğday ekmeği', 247, 13, 41, 3.4, 30),
+  ('Yumurta (haşlanmış)', 155, 13, 1.1, 11, 50),
+  ('Menemen', 95, 5, 4, 7, 250),
+  ('Beyaz peynir', 264, 17, 1, 21, 30),
+  ('Kaşar peyniri', 375, 26, 1.5, 29, 30),
+  ('Siyah zeytin', 260, 2, 4, 26, 30),
+  ('Yeşil zeytin', 145, 1, 4, 15, 30),
+  ('Domates', 18, 0.9, 3.9, 0.2, 120),
+  ('Salatalık', 15, 0.7, 3.6, 0.1, 100),
+  ('Bal', 304, 0.3, 82, 0, 20),
+  ('Tereyağı', 717, 0.9, 0.1, 81, 10),
+  ('Zeytinyağı', 884, 0, 0, 100, 10),
+  ('Pirinç pilavı', 160, 3, 28, 4, 180),
+  ('Bulgur pilavı', 120, 3.5, 22, 2.5, 180),
+  ('Makarna (haşlanmış)', 158, 5.8, 31, 0.9, 200),
+  ('Mercimek çorbası', 65, 3.5, 9, 1.8, 250),
+  ('Kuru fasulye yemeği', 115, 6, 15, 3.5, 250),
+  ('Nohut yemeği', 130, 6, 17, 4, 250),
+  ('Tavuk göğsü (ızgara)', 165, 31, 0, 3.6, 150),
+  ('Köfte (ızgara)', 250, 18, 6, 17, 150),
+  ('Tavuk döner', 200, 20, 3, 12, 150),
+  ('Lahmacun', 235, 10, 32, 7, 130),
+  ('Kıymalı pide', 260, 12, 33, 9, 250),
+  ('Mantı (yoğurtlu)', 180, 8, 25, 5.5, 250),
+  ('Su böreği', 260, 9, 25, 14, 150),
+  ('Kaşarlı tost', 290, 13, 30, 13, 150),
+  ('Çiğ köfte (etsiz)', 150, 4, 28, 2.5, 150),
+  ('Somon (ızgara)', 206, 22, 0, 13, 150),
+  ('Ton balığı (suda konserve)', 116, 26, 0, 1, 80),
+  ('Patates (haşlanmış)', 87, 1.9, 20, 0.1, 150),
+  ('Patates kızartması', 312, 3.4, 41, 15, 150),
+  ('Yoğurt (tam yağlı)', 65, 3.5, 4.7, 3.3, 150),
+  ('Ayran', 37, 1.7, 2.4, 2, 250),
+  ('Süt (tam yağlı)', 61, 3.2, 4.8, 3.3, 200),
+  ('Yulaf ezmesi', 389, 17, 66, 7, 40),
+  ('Muz', 89, 1.1, 23, 0.3, 120),
+  ('Elma', 52, 0.3, 14, 0.2, 180),
+  ('Portakal', 47, 0.9, 12, 0.1, 180),
+  ('Karpuz', 30, 0.6, 8, 0.2, 300),
+  ('Ceviz', 654, 15, 14, 65, 15),
+  ('Fındık', 628, 15, 17, 61, 15),
+  ('Badem', 579, 21, 22, 50, 15),
+  ('Baklava', 430, 6, 50, 23, 40),
+  ('Sütlaç', 120, 3, 20, 3, 200),
+  ('Toz şeker', 387, 0, 100, 0, 5),
+  ('Kola', 42, 0, 10.6, 0, 330),
+  ('Çay (şekersiz)', 1, 0, 0.2, 0, 100)
+) as v(name, kcal, p, c, f, serving)
+where not exists (
+  select 1 from public.products p where p.name = v.name and p.source = 'tr-temel'
+);
