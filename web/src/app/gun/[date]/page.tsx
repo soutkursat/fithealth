@@ -48,7 +48,13 @@ async function Day({ date }: { date: string }) {
       </div>
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <StatTile label="Alınan" swatch="in" value={kcal(summary.kcal_in)} unit="kcal" hint={`Hedef ${kcal(settings.daily_kcal_goal)} kcal`} />
-        <StatTile label="Harcanan" swatch="out" value={kcal(summary.total_kcal)} unit="kcal" hint={summary.active_kcal != null ? `Aktif ${kcal(summary.active_kcal)} kcal` : undefined} />
+        <StatTile
+          label="Harcanan"
+          swatch="out"
+          value={summary.total_kcal != null && summary.total_estimated ? `~${kcal(summary.total_kcal)}` : kcal(summary.total_kcal)}
+          unit="kcal"
+          hint={summary.total_estimated ? "Tahmini (dinlenme) değeri" : summary.active_kcal != null ? `Aktif ${kcal(summary.active_kcal)} kcal` : undefined}
+        />
         <StatTile
           label="Denge"
           value={b == null ? "—" : `${b > 0 ? "+" : b < 0 ? "−" : ""}${kcal(Math.abs(b))}`}

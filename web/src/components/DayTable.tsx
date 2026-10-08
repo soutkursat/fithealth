@@ -30,7 +30,9 @@ export function DayTable({ rows }: { rows: DailySummary[] }) {
                   </Link>
                 </td>
                 <td className="px-2 py-2.5 text-right">{r.items > 0 ? kcal(r.kcal_in) : "—"}</td>
-                <td className="hidden px-2 py-2.5 text-right sm:table-cell">{kcal(r.total_kcal)}</td>
+                <td className={`hidden px-2 py-2.5 text-right sm:table-cell ${r.total_estimated ? "text-muted" : ""}`} title={r.total_estimated ? "Tahmini (dinlenme) değeri" : undefined}>
+                  {r.total_kcal != null && r.total_estimated ? `~${kcal(r.total_kcal)}` : kcal(r.total_kcal)}
+                </td>
                 <td className={`px-2 py-2.5 text-right font-medium ${b == null ? "text-muted" : b <= 0 ? "text-good" : "text-bad"}`}>
                   {b == null ? "—" : `${b > 0 ? "+" : b < 0 ? "−" : ""}${kcal(Math.abs(b))}`}
                 </td>

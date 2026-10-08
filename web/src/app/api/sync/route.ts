@@ -8,12 +8,22 @@ import { isValidIsoDate } from "@/lib/dates";
  * POST /api/sync
  * Authorization: Bearer <SYNC_TOKEN>
  * {
- *   "days":    [{ "date": "2026-10-08", "activeKcal": 512, "totalKcal": 2480, "steps": 9120, "distanceM": 6800 }],
+ *   "days":    [{ "date": "2026-10-08", "activeKcal": 512, "totalKcal": 2480, "steps": 9120, "distanceM": 6800,
+ *                 "totalEstimated": false, "sources": ["com.sec.android.app.shealth"] }],
  *   "weights": [{ "date": "2026-10-08", "kg": 92.4 }]
  * }
  */
 
-type DayIn = { date: string; activeKcal?: number | null; totalKcal?: number | null; steps?: number | null; distanceM?: number | null };
+type DayIn = {
+  date: string;
+  activeKcal?: number | null;
+  totalKcal?: number | null;
+  steps?: number | null;
+  distanceM?: number | null;
+  /** Total is only Health Connect's basal estimate (no real calorie data). */
+  totalEstimated?: boolean;
+  sources?: string[];
+};
 type WeightIn = { date: string; kg: number };
 
 function tokenOk(given: string | null): boolean {
@@ -49,6 +59,10 @@ export async function POST(req: Request) {
       total_kcal: num(d.totalKcal, 30000),
       steps: num(d.steps, 500000),
       distance_m: num(d.distanceM, 1000000),
+      total_estimated: d.totalEstimated === true,
+      sources: Array.isArray(d.sources)
+        ? d.sources.filter((x): x is string => typeof x === "string").slice(0, 20).map((x) => x.slice(0, 120))
+        : null,
       source: "health-connect",
       synced_at: now,
     }));
@@ -60,7 +74,16 @@ export async function POST(req: Request) {
   const supabase = getAdminClient();
 
   if (days.length) {
-    const { error } = await supabase.from("daily_activity").upsert(days, { onConflict: "log_date" });
+    let { error } = await supabase.from("daily_activity").upsert(days, { onConflict: "log_date" });
+    if (error?.code === "PGRST204") {
+      // Veritabanında yeni kolonlar yok (schema.sql tekrar çalıştırılmamış): onlarsız kaydet.
+      const legacy = days.map(({ total_estimated, sources, ...rest }) => {
+        void total_estimated;
+        void sources;
+        return rest;
+      });
+      ({ error } = await supabase.from("daily_activity").upsert(legacy, { onConflict: "log_date" }));
+    }
     if (error) return Response.json({ error: error.message }, { status: 500 });
   }
 

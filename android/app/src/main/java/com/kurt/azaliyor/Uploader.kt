@@ -20,6 +20,8 @@ object Uploader {
                             d.totalKcal?.let { put("totalKcal", it) }
                             d.steps?.let { put("steps", it) }
                             d.distanceM?.let { put("distanceM", it) }
+                            put("totalEstimated", d.totalEstimated)
+                            put("sources", JSONArray(d.sources))
                         })
                     }
                 })

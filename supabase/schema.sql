@@ -90,6 +90,9 @@ create table if not exists public.daily_activity (
   source text not null default 'health-connect',
   synced_at timestamptz not null default now()
 );
+-- Eski kurulumlar için: sonradan eklenen kolonlar
+alter table public.daily_activity add column if not exists total_estimated boolean not null default false;
+alter table public.daily_activity add column if not exists sources text[];
 
 -- ─────────────────────────────────────────────────────────────
 -- Kilo (gün başına bir kayıt)
@@ -117,7 +120,8 @@ select
   a.active_kcal,
   a.total_kcal,
   a.steps,
-  w.kg
+  w.kg,
+  coalesce(a.total_estimated, false) as total_estimated
 from (
   select log_date from public.food_logs
   union

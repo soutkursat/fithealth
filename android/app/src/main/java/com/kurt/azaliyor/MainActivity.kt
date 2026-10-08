@@ -184,6 +184,19 @@ private fun BridgeScreen() {
                 Stat("Aktif", today?.activeKcal?.let { "${it.roundToInt()} kcal" } ?: "—")
                 Stat("Adım", today?.steps?.toString() ?: "—")
             }
+            today?.let { d ->
+                if (d.totalEstimated) {
+                    Text(
+                        "⚠️ Toplam kalori için gerçek veri yok; gösterilen değer Health Connect'in tahmini bazal (dinlenme) değeri. " +
+                            "Saat/bileklik uygulamanda Health Connect'e “kalori” yazma iznini aç.",
+                        color = Color(0xFFFAB219), fontSize = 13.sp,
+                    )
+                }
+                Text(
+                    "Kaynak: " + (d.sources.map(::appName).ifEmpty { listOf("yok") }.joinToString()),
+                    fontSize = 12.sp, color = Color(0xFF9A9890),
+                )
+            }
             Row(verticalAlignment = Alignment.CenterVertically) {
                 OutlinedButton(
                     enabled = !busy && prefs.isConfigured && granted.isNotEmpty(),
@@ -205,6 +218,20 @@ private fun BridgeScreen() {
             fontSize = 12.sp, color = Color(0xFF9A9890),
         )
     }
+}
+
+private fun appName(pkg: String): String = when (pkg) {
+    "com.sec.android.app.shealth" -> "Samsung Health"
+    "com.google.android.apps.fitness" -> "Google Fit"
+    "com.fitbit.FitbitMobile" -> "Fitbit"
+    "com.xiaomi.wearable", "com.mi.health" -> "Mi Fitness"
+    "com.huami.watch.hmwatchmanager", "com.xiaomi.hm.health" -> "Zepp"
+    "com.garmin.android.apps.connectmobile" -> "Garmin Connect"
+    "com.strava" -> "Strava"
+    "com.withings.wiscale2" -> "Withings"
+    "fi.polar.polarflow" -> "Polar Flow"
+    "com.google.android.apps.healthdata", "android" -> "Health Connect"
+    else -> pkg
 }
 
 @Composable

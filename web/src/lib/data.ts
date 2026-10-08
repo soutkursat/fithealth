@@ -26,6 +26,7 @@ function normSummary(r: Record<string, unknown>): DailySummary {
     total_kcal: toNum(r.total_kcal),
     steps: toNum(r.steps),
     kg: toNum(r.kg),
+    total_estimated: r.total_estimated === true,
   };
 }
 
@@ -107,6 +108,7 @@ export function fillDays(rows: DailySummary[], from: string, to: string): DailyS
         total_kcal: null,
         steps: null,
         kg: null,
+        total_estimated: false,
       },
     );
   }
@@ -142,9 +144,12 @@ export async function getHistory() {
 
 /**
  * Energy balance for a day: intake minus total burn. Negative = deficit.
- * Only meaningful when both sides were recorded.
+ * Only meaningful when both sides were recorded and the burn is real data
+ * (not Health Connect's basal estimate).
  */
-export function balance(s: Pick<DailySummary, "kcal_in" | "total_kcal" | "items">): number | null {
-  if (s.total_kcal == null || s.items === 0) return null;
+export function balance(
+  s: Pick<DailySummary, "kcal_in" | "total_kcal" | "items" | "total_estimated">,
+): number | null {
+  if (s.total_kcal == null || s.total_estimated || s.items === 0) return null;
   return Math.round(s.kcal_in - s.total_kcal);
 }

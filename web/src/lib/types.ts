@@ -43,6 +43,8 @@ export type DailySummary = {
   total_kcal: number | null;
   steps: number | null;
   kg: number | null;
+  /** total_kcal is only Health Connect's basal estimate, not real data. */
+  total_estimated: boolean;
 };
 
 export type Weight = { log_date: string; kg: number };

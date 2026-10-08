@@ -32,7 +32,7 @@ async function History() {
   const { summaries, settings } = await getHistory();
   const withFood = summaries.filter((s) => s.items > 0);
   const avgIn = withFood.length ? withFood.reduce((s, r) => s + r.kcal_in, 0) / withFood.length : null;
-  const withBurn = summaries.filter((s) => s.total_kcal != null);
+  const withBurn = summaries.filter((s) => s.total_kcal != null && !s.total_estimated);
   const avgOut = withBurn.length ? withBurn.reduce((s, r) => s + (r.total_kcal ?? 0), 0) / withBurn.length : null;
   const balances = summaries.map(balance).filter((b): b is number => b != null);
   const deficit = -balances.reduce((s, b) => s + b, 0);

@@ -56,7 +56,7 @@ async function Dashboard() {
     date: s.log_date,
     label: shortDate(s.log_date),
     in: s.items > 0 ? Math.round(s.kcal_in) : null,
-    out: s.total_kcal != null ? Math.round(s.total_kcal) : null,
+    out: s.total_kcal != null && !s.total_estimated ? Math.round(s.total_kcal) : null,
   }));
   const weightPoints = weights.map((w) => ({ date: w.log_date, label: shortDate(w.log_date), kg: w.kg }));
 
@@ -107,7 +107,19 @@ async function Dashboard() {
         </div>
         <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
           <StatTile label="Alınan" swatch="in" value={kcal(kcalIn)} unit="kcal" hint={`Hedef ${kcal(settings.daily_kcal_goal)} kcal`} />
-          <StatTile label="Harcanan" swatch="out" value={kcal(todaySum.total_kcal)} unit="kcal" hint={todaySum.active_kcal != null ? `Aktif ${kcal(todaySum.active_kcal)} kcal` : "Telefondan gelecek"} />
+          <StatTile
+            label="Harcanan"
+            swatch="out"
+            value={todaySum.total_kcal != null && todaySum.total_estimated ? `~${kcal(todaySum.total_kcal)}` : kcal(todaySum.total_kcal)}
+            unit="kcal"
+            hint={
+              todaySum.total_estimated
+                ? "Tahmini (dinlenme) değeri"
+                : todaySum.active_kcal != null
+                  ? `Aktif ${kcal(todaySum.active_kcal)} kcal`
+                  : "Telefondan gelecek"
+            }
+          />
           <StatTile
             label="Denge"
             value={bal == null ? "—" : `${bal > 0 ? "+" : bal < 0 ? "−" : ""}${kcal(Math.abs(bal))}`}

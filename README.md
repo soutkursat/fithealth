@@ -98,6 +98,15 @@ Panelde dört sekme var: **Ekle** (barkod, arama, yeni ürün, hızlı kalori, s
 
 Gönderilenler: günlük **toplam** ve **aktif** yakılan kalori, **adım**, **mesafe**, **kilo** (akıllı tartın Health Connect'e yazıyorsa). Elle girdiğin kilo, telefondan gelenle ezilmez.
 
+#### “Her gün ~2000 kcal yakmışım gibi görünüyor”
+
+Health Connect, hiçbir uygulama ona gerçek kalori verisi yazmadığında **toplam kaloriyi kendisi tahmin eder**. Bu tahmin sadece dinlenme (bazal) kalorisidir ve her gün aşağı yukarı aynı çıkar.
+
+- Köprü uygulaması artık bu günleri göndermiyor. Sitede tahmini değerler `~` ile gri gösteriliyor ve kalori dengesine katılmıyor.
+- Uygulamadaki **“Kaynak:”** satırı veriyi hangi uygulamanın yazdığını gösterir. “yok” ya da sadece “Health Connect” yazıyorsa saat/bileklik uygulamanda (Samsung Health, Mi Fitness, Fitbit…) **Health Connect → izinler → “Aktif kalori” / “Toplam kalori” yazma** iznini aç.
+- Tahminin gerçeğe yakın olması için Health Connect'te boy ve kilonun kayıtlı olması iyi olur.
+- Eski hatalı kayıtları temizlemek için Supabase SQL Editor'da `truncate public.daily_activity;` çalıştır, sonra uygulamada **Şimdi senkronla (30 gün)** düğmesine bas.
+
 #### APK güncellemeleri (isteğe bağlı)
 
 Varsayılan olarak her derleme farklı bir debug anahtarıyla imzalanır. Bu yüzden yeni sürümü kurmadan önce eskisini silmen gerekir (silince sadece site adresi ve anahtarı tekrar girersin).
