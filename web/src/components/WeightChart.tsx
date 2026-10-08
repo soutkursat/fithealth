@@ -1,6 +1,6 @@
 "use client";
 
-import { CartesianGrid, Line, LineChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { Area, AreaChart, CartesianGrid, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
 export type WeightPoint = { date: string; label: string; kg: number };
 
@@ -29,7 +29,13 @@ export function WeightChart({ data, target }: { data: WeightPoint[]; target: num
   return (
     <div className="h-64 w-full sm:h-72">
       <ResponsiveContainer width="100%" height="100%">
-        <LineChart data={data} margin={{ top: 8, right: 8, bottom: 0, left: -12 }}>
+        <AreaChart data={data} margin={{ top: 8, right: 8, bottom: 0, left: -12 }}>
+          <defs>
+            <linearGradient id="kg-fill" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stopColor="#5aa9ff" stopOpacity={0.35} />
+              <stop offset="1" stopColor="#5aa9ff" stopOpacity={0} />
+            </linearGradient>
+          </defs>
           <CartesianGrid vertical={false} stroke="var(--grid)" />
           <XAxis dataKey="label" tickLine={false} axisLine={{ stroke: "var(--axis)" }} tick={{ fill: "var(--muted)", fontSize: 11 }} interval="preserveStartEnd" minTickGap={16} />
           <YAxis domain={[min, max]} tickLine={false} axisLine={false} tick={{ fill: "var(--muted)", fontSize: 11 }} tickFormatter={(v: number) => fmt.format(v)} width={48} allowDecimals={false} />
@@ -37,8 +43,17 @@ export function WeightChart({ data, target }: { data: WeightPoint[]; target: num
           {target != null && (
             <ReferenceLine y={target} stroke="var(--good-mark)" strokeDasharray="4 4" label={{ value: `Hedef ${fmt.format(target)} kg`, position: "insideBottomRight", fill: "var(--ink-2)", fontSize: 11 }} />
           )}
-          <Line type="monotone" dataKey="kg" stroke="var(--accent)" strokeWidth={2} dot={{ r: 4, fill: "var(--accent)", stroke: "var(--surface)", strokeWidth: 2 }} activeDot={{ r: 6, stroke: "var(--surface)", strokeWidth: 2 }} />
-        </LineChart>
+          <Area
+            type="monotone"
+            dataKey="kg"
+            stroke="var(--accent)"
+            strokeWidth={2}
+            fill="url(#kg-fill)"
+            style={{ filter: "drop-shadow(0 0 6px rgba(90,169,255,0.6))" }}
+            dot={{ r: 4, fill: "var(--accent)", stroke: "var(--surface)", strokeWidth: 2 }}
+            activeDot={{ r: 6, fill: "var(--accent)", stroke: "#fff", strokeWidth: 2 }}
+          />
+        </AreaChart>
       </ResponsiveContainer>
     </div>
   );

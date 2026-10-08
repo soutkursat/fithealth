@@ -1,74 +1,38 @@
 @import "tailwindcss";
+@import "@fontsource-variable/manrope";
 
+/*
+ * "Gece" teması: site her zaman koyu. Parıltılar (glow) sadece vurgu
+ * öğelerinde; metin ve veriler sade kalır.
+ */
 :root {
-  color-scheme: light;
-  --page: #f9f9f7;
-  --surface: #fcfcfb;
-  --surface-2: #f2f1ed;
-  --ink: #0b0b0b;
-  --ink-2: #52514e;
-  --muted: #6f6e69;
-  --grid: #e1e0d9;
-  --axis: #c3c2b7;
-  --border: rgba(11, 11, 11, 0.1);
-  --accent: #2a78d6;
-  --accent-soft: #cde2fb;
-  --series-in: #eb6834;
-  --series-out: #2a78d6;
-  --good: #006300;
-  --good-mark: #0ca30c;
-  --bad: #c42f2f;
-  --warn: #8a5a00;
-  --m-protein: #1baf7a;
-  --m-carbs: #eda100;
-  --m-fat: #4a3aa7;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    color-scheme: dark;
-    --page: #0d0d0d;
-    --surface: #1a1a19;
-    --surface-2: #232321;
-    --ink: #ffffff;
-    --ink-2: #c3c2b7;
-    --muted: #9a9890;
-    --grid: #2c2c2a;
-    --axis: #383835;
-    --border: rgba(255, 255, 255, 0.1);
-    --accent: #3987e5;
-    --accent-soft: #184f95;
-    --series-in: #d95926;
-    --series-out: #3987e5;
-    --good: #0ca30c;
-    --good-mark: #0ca30c;
-    --bad: #e66767;
-    --warn: #fab219;
-    --m-protein: #199e70;
-    --m-carbs: #c98500;
-    --m-fat: #9085e9;
-  }
-}
-
-:root[data-theme="dark"] {
   color-scheme: dark;
-  --page: #0d0d0d;
-  --surface: #1a1a19;
-  --surface-2: #232321;
-  --ink: #ffffff;
-  --ink-2: #c3c2b7;
-  --muted: #9a9890;
-  --grid: #2c2c2a;
-  --axis: #383835;
-  --border: rgba(255, 255, 255, 0.1);
-  --accent: #3987e5;
-  --accent-soft: #184f95;
+  --page: #06080d;
+  --surface: #0f131b;
+  --surface-2: #161b25;
+  --ink: #f3f5fa;
+  --ink-2: #b3bbca;
+  --muted: #7d8697;
+  --grid: #1c2230;
+  --axis: #2b3242;
+  --border: rgba(255, 255, 255, 0.08);
+  --border-strong: rgba(255, 255, 255, 0.14);
+
+  --accent: #5aa9ff;
+  --accent-2: #8b7bff;
+  --accent-soft: #15283f;
+  --glow: rgba(90, 169, 255, 0.45);
+  --glow-2: rgba(139, 123, 255, 0.35);
+
+  /* Grafik serileri (doğrulanmış koyu tema adımları) */
   --series-in: #d95926;
   --series-out: #3987e5;
-  --good: #0ca30c;
-  --good-mark: #0ca30c;
-  --bad: #e66767;
+
+  --good: #3ddc97;
+  --good-mark: #3ddc97;
+  --bad: #ff7a7a;
   --warn: #fab219;
+
   --m-protein: #199e70;
   --m-carbs: #c98500;
   --m-fat: #9085e9;
@@ -82,8 +46,10 @@
   --color-ink-2: var(--ink-2);
   --color-muted: var(--muted);
   --color-line: var(--border);
+  --color-line-strong: var(--border-strong);
   --color-grid: var(--grid);
   --color-accent: var(--accent);
+  --color-accent-2: var(--accent-2);
   --color-accent-soft: var(--accent-soft);
   --color-in: var(--series-in);
   --color-out: var(--series-out);
@@ -94,23 +60,105 @@
   --color-m-protein: var(--m-protein);
   --color-m-carbs: var(--m-carbs);
   --color-m-fat: var(--m-fat);
-  --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-sans: "Manrope Variable", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 }
 
 html {
   -webkit-text-size-adjust: 100%;
+  background: var(--page);
 }
 
 body {
   background: var(--page);
   color: var(--ink);
   font-family: var(--font-sans);
+  position: relative;
+  isolation: isolate;
 }
 
-.card {
-  background: var(--surface);
+/* Arka plan: hafif kuzey ışığı parıltıları + çok silik ızgara */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+  background:
+    radial-gradient(60rem 40rem at 85% -10%, rgba(90, 169, 255, 0.16), transparent 60%),
+    radial-gradient(50rem 36rem at -10% 10%, rgba(139, 123, 255, 0.12), transparent 60%),
+    radial-gradient(40rem 30rem at 50% 110%, rgba(61, 220, 151, 0.06), transparent 60%);
+}
+
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
+  background-size: 48px 48px;
+  mask-image: radial-gradient(ellipse at 50% 0%, black 0%, transparent 70%);
+}
+
+/* Cam kart */
+.card,
+.glass {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0.015)), rgba(15, 19, 27, 0.78);
   border: 1px solid var(--border);
-  border-radius: 1rem;
+  border-radius: 1.25rem;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    0 10px 30px -12px rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+.glass-hover {
+  transition:
+    transform 0.25s ease,
+    border-color 0.25s ease,
+    box-shadow 0.25s ease;
+}
+.glass-hover:hover {
+  transform: translateY(-2px);
+  border-color: var(--border-strong);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 16px 40px -14px rgba(0, 0, 0, 0.7),
+    0 0 0 1px rgba(90, 169, 255, 0.08),
+    0 0 32px -8px var(--glow);
+}
+
+/* Parlayan kenarlı vurgu kartı (kahraman bölümü) */
+.glow-border {
+  position: relative;
+}
+.glow-border::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(135deg, rgba(90, 169, 255, 0.55), rgba(139, 123, 255, 0.25) 40%, rgba(255, 255, 255, 0.04) 70%);
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+.text-glow {
+  text-shadow: 0 0 24px var(--glow);
+}
+
+.gradient-text {
+  background: linear-gradient(135deg, #ffffff 0%, #bfe0ff 45%, #a99dff 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 
 .tabular {
@@ -120,5 +168,79 @@ body {
 input,
 select,
 textarea {
-  font-size: 16px; /* iOS/Android: odaklanınca zoom yapmasın */
+  font-size: 16px; /* telefonda odaklanınca zoom yapmasın */
+}
+
+/* ── Animasyonlar ── */
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.reveal {
+  animation: rise 0.7s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  animation-delay: var(--d, 0ms);
+}
+
+@keyframes ring-fill {
+  from {
+    stroke-dashoffset: var(--ring-len);
+  }
+}
+.ring-progress {
+  animation: ring-fill 1.6s cubic-bezier(0.2, 0.7, 0.2, 1) 0.2s both;
+}
+
+@keyframes bar-grow {
+  from {
+    transform: scaleX(0);
+  }
+}
+.bar-grow {
+  transform-origin: left center;
+  animation: bar-grow 1.4s cubic-bezier(0.2, 0.7, 0.2, 1) 0.3s both;
+}
+
+@keyframes breathe {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+.breathe {
+  animation: breathe 4s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+.float {
+  animation: float 6s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal,
+  .ring-progress,
+  .bar-grow,
+  .breathe,
+  .float {
+    animation: none !important;
+  }
+  .glass-hover:hover {
+    transform: none;
+  }
 }

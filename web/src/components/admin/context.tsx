@@ -41,5 +41,5 @@ export async function api<T>(path: string, token: string): Promise<T> {
 export const inputCls =
   "w-full rounded-xl border border-line bg-surface px-3.5 py-2.5 outline-none focus:border-accent focus:ring-2 focus:ring-accent/30";
 export const btnPrimary =
-  "rounded-xl bg-accent px-4 py-3 font-semibold text-white disabled:opacity-50 active:scale-[0.98] transition";
+  "rounded-xl bg-accent px-4 py-3 font-bold text-[#06080d] shadow-[0_0_24px_-6px_var(--glow)] disabled:opacity-50 active:scale-[0.98] transition";
 export const btnGhost = "rounded-xl border border-line px-4 py-3 font-medium hover:bg-surface-2 active:scale-[0.98] transition";

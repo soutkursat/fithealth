@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import Link from "next/link";
-import { SiteFooter, SiteHeader } from "@/components/SiteHeader";
+import { SectionTitle, SiteFooter, SiteHeader } from "@/components/SiteHeader";
+import { WeightHero } from "@/components/WeightHero";
 import { StatTile } from "@/components/StatTile";
 import { MacroBar } from "@/components/MacroBar";
 import { MealList } from "@/components/MealList";
@@ -11,13 +12,13 @@ import { DayTable } from "@/components/DayTable";
 import { balance, getDashboard } from "@/lib/data";
 import { isConfigured } from "@/lib/supabase";
 import { formatDate, formatDateTime, shortDate } from "@/lib/dates";
-import { KCAL_PER_KG, kcal, num1 } from "@/lib/format";
+import { kcal } from "@/lib/format";
 
 export default function Home() {
   return (
     <>
       <SiteHeader active="bugun" />
-      <main className="mx-auto w-full max-w-5xl px-4 py-5 sm:py-8">
+      <main className="mx-auto w-full max-w-5xl px-4 py-6 sm:py-10">
         {isConfigured ? (
           <Suspense fallback={<PageSkeleton />}>
             <Dashboard />
@@ -38,19 +39,22 @@ async function Dashboard() {
   const remaining = settings.daily_kcal_goal - kcalIn;
   const bal = balance({ ...todaySum, kcal_in: kcalIn, items: logs.length });
 
-  // Kilo ilerlemesi
-  const current = weights.at(-1)?.kg ?? null;
+  // Kilo
+  const last = weights.at(-1);
   const start = settings.start_weight ?? weights[0]?.kg ?? null;
-  const target = settings.target_weight;
-  const lost = start != null && current != null ? start - current : null;
-  const progress =
-    start != null && current != null && target != null && start !== target
-      ? Math.min(100, Math.max(0, ((start - current) / (start - target)) * 100))
-      : null;
 
-  // Son 30 gündeki tahmini kalori açığı (iki taraf da kayıtlı günler)
+  // Son 30 günün kalori açığı (iki taraf da gerçek veriyle kayıtlı günler)
   const tracked = summaries.map(balance).filter((b): b is number => b != null);
-  const deficit = -tracked.reduce((s, b) => s + b, 0);
+  const deficit = tracked.length ? -tracked.reduce((s, b) => s + b, 0) : null;
+
+  // Üst üste kalori açığında geçen gün sayısı (bugün henüz bitmediği için dünden geriye)
+  let streak = 0;
+  for (let i = summaries.length - 2; i >= 0; i--) {
+    const b = balance(summaries[i]);
+    if (b == null || b >= 0) break;
+    streak++;
+  }
+  if (bal != null && bal < 0) streak++;
 
   const last14 = summaries.slice(-14).map((s) => ({
     date: s.log_date,
@@ -59,57 +63,51 @@ async function Dashboard() {
     out: s.total_kcal != null && !s.total_estimated ? Math.round(s.total_kcal) : null,
   }));
   const weightPoints = weights.map((w) => ({ date: w.log_date, label: shortDate(w.log_date), kg: w.kg }));
+  const goalPct = settings.daily_kcal_goal > 0 ? (kcalIn / settings.daily_kcal_goal) * 100 : 0;
 
   return (
-    <div className="flex flex-col gap-6 sm:gap-8">
-      {/* Kahraman: kilo */}
-      <section className="card grid gap-5 p-5 sm:grid-cols-[1.2fr_1fr] sm:p-7">
-        <div>
-          <p className="text-sm text-ink-2">{settings.display_name} şu ana kadar</p>
-          <p className="mt-1 text-5xl font-semibold tracking-tight sm:text-6xl">
-            {lost != null ? `${lost > 0 ? "−" : lost < 0 ? "+" : ""}${num1(Math.abs(lost))}` : "—"}
-            <span className="ml-2 text-xl font-normal text-ink-2">kg</span>
-          </p>
-          <p className="mt-2 text-sm text-ink-2">
-            {current != null ? <>Şu an <b className="text-ink">{num1(current)} kg</b></> : "Henüz kilo kaydı yok"}
-            {target != null && <> · Hedef <b className="text-ink">{num1(target)} kg</b></>}
-            {current != null && target != null && current > target && <> · Kalan {num1(current - target)} kg</>}
-          </p>
-        </div>
-        <div className="flex flex-col justify-center gap-2">
-          {progress != null && (
-            <>
-              <div className="flex justify-between text-sm text-ink-2">
-                <span>{num1(start)} kg</span>
-                <span className="font-medium text-ink">%{Math.round(progress)}</span>
-                <span>{num1(target)} kg</span>
-              </div>
-              <div className="h-3 w-full overflow-hidden rounded-full bg-accent-soft" role="progressbar" aria-valuenow={Math.round(progress)} aria-valuemin={0} aria-valuemax={100} aria-label="Hedefe ilerleme">
-                <div className="h-full rounded-full bg-accent" style={{ width: `${progress}%` }} />
-              </div>
-            </>
-          )}
-          {tracked.length > 0 && (
-            <p className="text-sm text-ink-2">
-              Son 30 günde {deficit >= 0 ? "toplam açık" : "toplam fazla"}{" "}
-              <b className="text-ink">{kcal(Math.abs(deficit))} kcal</b> ≈{" "}
-              <b className={deficit >= 0 ? "text-good" : "text-bad"}>{num1(Math.abs(deficit) / KCAL_PER_KG)} kg yağ</b>
-            </p>
-          )}
-        </div>
-      </section>
+    <div className="flex flex-col gap-10 sm:gap-14">
+      <WeightHero
+        name={settings.display_name}
+        current={last?.kg ?? null}
+        currentDate={last?.log_date ?? null}
+        start={start}
+        target={settings.target_weight}
+        startDate={settings.start_date ?? weights[0]?.log_date ?? null}
+        deficit={deficit}
+        trackedDays={tracked.length}
+        streak={streak}
+      />
 
       {/* Bugün */}
-      <section className="flex flex-col gap-3">
-        <div className="flex flex-wrap items-baseline justify-between gap-2">
-          <h2 className="text-xl font-semibold">Bugün <span className="text-base font-normal text-ink-2">· {formatDate(today)}</span></h2>
-          {lastSync && <span className="text-xs text-muted">Telefon senkronu: {formatDateTime(lastSync)}</span>}
-        </div>
+      <section className="flex flex-col gap-4">
+        <SectionTitle
+          title="Bugün"
+          sub={formatDate(today)}
+          right={
+            lastSync && (
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-line bg-white/[0.03] px-3 py-1 text-xs text-muted">
+                <span className="size-1.5 rounded-full bg-good shadow-[0_0_8px_var(--good)]" />
+                Telefon senkronu {formatDateTime(lastSync)}
+              </span>
+            )
+          }
+        />
         <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-          <StatTile label="Alınan" swatch="in" value={kcal(kcalIn)} unit="kcal" hint={`Hedef ${kcal(settings.daily_kcal_goal)} kcal`} />
+          <StatTile
+            label="Alınan"
+            swatch="in"
+            icon="fork"
+            value={kcal(kcalIn)}
+            unit="kcal"
+            meter={{ pct: goalPct, over: goalPct > 100 }}
+            hint={`Hedef ${kcal(settings.daily_kcal_goal)} kcal`}
+            delay={60}
+          />
           <StatTile
             label="Harcanan"
             swatch="out"
+            icon="flame"
             value={todaySum.total_kcal != null && todaySum.total_estimated ? `~${kcal(todaySum.total_kcal)}` : kcal(todaySum.total_kcal)}
             unit="kcal"
             hint={
@@ -119,24 +117,29 @@ async function Dashboard() {
                   ? `Aktif ${kcal(todaySum.active_kcal)} kcal`
                   : "Telefondan gelecek"
             }
+            delay={120}
           />
           <StatTile
             label="Denge"
+            icon="scale"
             value={bal == null ? "—" : `${bal > 0 ? "+" : bal < 0 ? "−" : ""}${kcal(Math.abs(bal))}`}
             unit="kcal"
             tone={bal == null ? undefined : bal <= 0 ? "good" : "bad"}
             hint={bal == null ? "Alınan − harcanan" : bal <= 0 ? "Kalori açığında 👍" : "Kalori fazlasında"}
+            delay={180}
           />
           <StatTile
             label={remaining >= 0 ? "Kalan hak" : "Hedef aşıldı"}
+            icon={remaining >= 0 ? "target" : "fire"}
             value={kcal(Math.abs(remaining))}
             unit="kcal"
             tone={remaining >= 0 ? undefined : "bad"}
-            hint={todaySum.steps != null ? `${kcal(todaySum.steps)} adım` : undefined}
+            hint={todaySum.steps != null ? `${kcal(todaySum.steps)} adım` : "Günlük hedefe göre"}
+            delay={240}
           />
         </div>
         {kcalIn > 0 && (
-          <div className="card p-4">
+          <div className="glass reveal p-4 sm:p-5" style={{ ["--d" as string]: "300ms" }}>
             <MacroBar
               protein={logs.reduce((s, l) => s + (l.protein ?? 0), 0)}
               carbs={logs.reduce((s, l) => s + (l.carbs ?? 0), 0)}
@@ -148,25 +151,25 @@ async function Dashboard() {
       </section>
 
       {/* Grafikler */}
-      <div className="grid gap-6 lg:grid-cols-2">
-        <section className="card p-4 sm:p-5">
-          <h2 className="mb-1 text-lg font-semibold">Son 14 gün</h2>
-          <p className="mb-3 text-sm text-ink-2">Günlük alınan ve harcanan kalori</p>
+      <div className="grid gap-4 lg:grid-cols-2">
+        <section className="glass reveal p-4 sm:p-6">
+          <h2 className="text-lg font-bold">Son 14 gün</h2>
+          <p className="mb-4 text-sm text-ink-2">Günlük alınan ve harcanan kalori</p>
           <CalorieChart data={last14} goal={settings.daily_kcal_goal} />
         </section>
-        <section className="card p-4 sm:p-5">
-          <h2 className="mb-1 text-lg font-semibold">Kilo</h2>
-          <p className="mb-3 text-sm text-ink-2">Tüm kayıtlar</p>
-          <WeightChart data={weightPoints} target={target} />
+        <section className="glass reveal p-4 sm:p-6" style={{ ["--d" as string]: "80ms" }}>
+          <h2 className="text-lg font-bold">Kilo grafiği</h2>
+          <p className="mb-4 text-sm text-ink-2">Tüm tartılar</p>
+          <WeightChart data={weightPoints} target={settings.target_weight} />
         </section>
       </div>
 
       {/* Son günler */}
-      <section className="flex flex-col gap-3">
-        <div className="flex items-baseline justify-between">
-          <h2 className="text-lg font-semibold">Son 7 gün</h2>
-          <Link href="/gecmis" className="text-sm text-accent hover:underline">Tümü →</Link>
-        </div>
+      <section className="flex flex-col gap-4">
+        <SectionTitle
+          title="Son 7 gün"
+          right={<Link href="/gecmis" className="text-sm font-semibold text-accent hover:underline">Tüm geçmiş →</Link>}
+        />
         <DayTable rows={summaries.slice(-8, -1).reverse()} />
       </section>
     </div>

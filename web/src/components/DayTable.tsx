@@ -5,11 +5,11 @@ import { kcal, num1 } from "@/lib/format";
 import type { DailySummary } from "@/lib/types";
 
 export function DayTable({ rows }: { rows: DailySummary[] }) {
-  if (rows.length === 0) return <p className="card p-6 text-center text-sm text-muted">Kayıt yok.</p>;
+  if (rows.length === 0) return <p className="glass p-8 text-center text-sm text-muted">Kayıt yok.</p>;
   return (
-    <div className="card overflow-hidden">
+    <div className="glass reveal overflow-hidden">
       <table className="w-full text-sm tabular">
-        <thead className="border-b border-line text-left text-xs text-muted">
+        <thead className="border-b border-line bg-white/[0.02] text-left text-xs uppercase tracking-wider text-muted">
           <tr>
             <th className="px-4 py-2.5 font-medium">Gün</th>
             <th className="px-2 py-2.5 text-right font-medium">Alınan</th>
@@ -23,7 +23,7 @@ export function DayTable({ rows }: { rows: DailySummary[] }) {
           {rows.map((r) => {
             const b = balance(r);
             return (
-              <tr key={r.log_date} className="hover:bg-surface-2">
+              <tr key={r.log_date} className="transition-colors hover:bg-white/[0.03]">
                 <td className="px-4 py-2.5">
                   <Link href={`/gun/${r.log_date}`} className="font-medium hover:underline">
                     {formatDate(r.log_date, { day: "numeric", month: "short", weekday: "short" })}

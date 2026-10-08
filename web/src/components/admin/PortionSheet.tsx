@@ -104,7 +104,7 @@ export function PortionSheet({
       <input className={`${inputCls} mt-1 text-lg`} inputMode="decimal" value={grams} onChange={(e) => setGrams(e.target.value)} autoFocus />
       <div className="mt-2 flex flex-wrap gap-2">
         {presets.map((v) => (
-          <button key={v} type="button" onClick={() => setGrams(String(v))} className={`rounded-full border px-3 py-1 text-sm ${g === v ? "border-accent bg-accent text-white" : "border-line"}`}>
+          <button key={v} type="button" onClick={() => setGrams(String(v))} className={`rounded-full border px-3 py-1 text-sm ${g === v ? "border-accent bg-accent font-semibold text-[#06080d]" : "border-line"}`}>
             {v === product.serving_g ? `1 porsiyon (${v} g)` : `${v} g`}
           </button>
         ))}
@@ -157,9 +157,10 @@ export function MealPicker({ value, onChange }: { value: Meal; onChange: (m: Mea
 
 export function Sheet({ children, onClose }: { children: React.ReactNode; onClose: () => void }) {
   return (
-    <div className="fixed inset-0 z-40 flex items-end justify-center bg-black/50 sm:items-center" onClick={onClose}>
+    <div className="fixed inset-0 z-40 flex items-end justify-center bg-black/70 backdrop-blur-sm sm:items-center" onClick={onClose}>
       <div
         className="card max-h-[92dvh] w-full max-w-lg overflow-y-auto rounded-b-none p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] sm:rounded-2xl"
+        style={{ background: "var(--surface)", backdropFilter: "none" }}
         onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"

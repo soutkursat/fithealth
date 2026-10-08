@@ -35,12 +35,12 @@ async function Day({ date }: { date: string }) {
   if (!isValidIsoDate(date)) notFound();
   const { settings, logs, summary } = await getDay(date);
   const b = balance(summary);
-  const nav = "rounded-full border border-line px-3 py-1.5 text-sm hover:bg-surface-2";
+  const nav = "rounded-full border border-line bg-white/[0.03] px-3.5 py-1.5 text-sm font-medium transition hover:bg-white/[0.07] hover:text-ink";
 
   return (
     <div className="flex flex-col gap-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-semibold">{formatDate(date, { day: "numeric", month: "long", year: "numeric", weekday: "long" })}</h1>
+        <h1 className="reveal text-2xl font-extrabold tracking-tight sm:text-3xl">{formatDate(date, { day: "numeric", month: "long", year: "numeric", weekday: "long" })}</h1>
         <div className="flex gap-2">
           <Link className={nav} href={`/gun/${addDays(date, -1)}`}>← Önceki</Link>
           <Link className={nav} href={`/gun/${addDays(date, 1)}`}>Sonraki →</Link>
@@ -64,7 +64,7 @@ async function Day({ date }: { date: string }) {
         <StatTile label="Kilo" value={summary.kg != null ? num1(summary.kg) : "—"} unit={summary.kg != null ? "kg" : undefined} hint={summary.steps != null ? `${kcal(summary.steps)} adım` : undefined} />
       </div>
       {summary.kcal_in > 0 && (
-        <div className="card p-4">
+        <div className="glass reveal p-4 sm:p-5">
           <MacroBar protein={summary.protein} carbs={summary.carbs} fat={summary.fat} />
         </div>
       )}
