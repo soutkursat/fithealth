@@ -12,7 +12,7 @@ val keystorePath: String? = System.getenv("KEYSTORE_PATH")
 
 android {
     namespace = "com.kurt.azaliyor"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.kurt.azaliyor"
