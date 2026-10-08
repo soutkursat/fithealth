@@ -13,6 +13,8 @@ export type Settings = {
   start_weight: number | null;
   target_weight: number | null;
   start_date: string | null;
+  status_message: string | null;
+  show_notes: boolean;
 };
 
 export type FoodLog = {
@@ -45,7 +47,15 @@ export type DailySummary = {
   kg: number | null;
   /** total_kcal is only Health Connect's basal estimate, not real data. */
   total_estimated: boolean;
+  /** Admin-entered day total, used only when the phone sent no real total. */
+  manual_total_kcal: number | null;
+  /** Admin-entered extra activity, added on top of the day's burn. */
+  extra_kcal: number | null;
 };
+
+export type Note = { id: number; name: string; message: string; created_at: string };
+
+export type MotivationCounts = { today: number; total: number };
 
 export type Weight = { log_date: string; kg: number };
 

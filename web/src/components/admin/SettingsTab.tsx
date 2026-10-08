@@ -5,7 +5,8 @@ import { btnGhost, btnPrimary, inputCls, useAdmin } from "./context";
 
 export function SettingsTab({ onSignOut }: { onSignOut: () => void }) {
   const { supabase, toast } = useAdmin();
-  const [f, setF] = useState({ display_name: "", daily_kcal_goal: "", start_weight: "", target_weight: "", start_date: "" });
+  const [f, setF] = useState({ display_name: "", daily_kcal_goal: "", start_weight: "", target_weight: "", start_date: "", status_message: "" });
+  const [showNotes, setShowNotes] = useState(true);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -22,7 +23,9 @@ export function SettingsTab({ onSignOut }: { onSignOut: () => void }) {
           start_weight: data.start_weight == null ? "" : String(data.start_weight),
           target_weight: data.target_weight == null ? "" : String(data.target_weight),
           start_date: data.start_date ?? "",
+          status_message: data.status_message ?? "",
         });
+        setShowNotes(data.show_notes ?? true);
       });
   }, [supabase]);
 
@@ -42,6 +45,8 @@ export function SettingsTab({ onSignOut }: { onSignOut: () => void }) {
         start_weight: num(f.start_weight),
         target_weight: num(f.target_weight),
         start_date: f.start_date || null,
+        status_message: f.status_message.trim() || null,
+        show_notes: showNotes,
         updated_at: new Date().toISOString(),
       })
       .eq("id", 1);
@@ -54,13 +59,21 @@ export function SettingsTab({ onSignOut }: { onSignOut: () => void }) {
 
   return (
     <form onSubmit={save} className="card flex flex-col gap-3 p-4">
+      <h2 className="font-bold">⚙️ Ayarlar</h2>
       <L label="Sitede görünen isim"><input className={inputCls} value={f.display_name} onChange={set("display_name")} /></L>
-      <L label="Günlük kalori hedefi (kcal)"><input className={inputCls} inputMode="numeric" value={f.daily_kcal_goal} onChange={set("daily_kcal_goal")} /></L>
+      <L label="Günlük kalori sınırı (kcal)"><input className={inputCls} inputMode="numeric" value={f.daily_kcal_goal} onChange={set("daily_kcal_goal")} /></L>
       <div className="grid grid-cols-2 gap-3">
         <L label="Başlangıç kilosu"><input className={inputCls} inputMode="decimal" value={f.start_weight} onChange={set("start_weight")} /></L>
-        <L label="Hedef kilo"><input className={inputCls} inputMode="decimal" value={f.target_weight} onChange={set("target_weight")} /></L>
+        <L label="Hedef kilo (Kızılelma)"><input className={inputCls} inputMode="decimal" value={f.target_weight} onChange={set("target_weight")} /></L>
       </div>
-      <L label="Başlangıç tarihi"><input className={inputCls} type="date" value={f.start_date} onChange={set("start_date")} /></L>
+      <L label="Sefere çıkış tarihi"><input className={inputCls} type="date" value={f.start_date} onChange={set("start_date")} /></L>
+      <L label="Sitede görünecek sözün">
+        <input className={inputCls} maxLength={140} placeholder="ör. Bu sefer geri dönüş yok!" value={f.status_message} onChange={set("status_message")} />
+      </L>
+      <label className="flex items-center justify-between gap-3 rounded-xl border border-line px-3.5 py-3 text-sm font-medium">
+        Ziyaretçi notlarını sitede göster
+        <input type="checkbox" className="size-5 accent-[var(--accent)]" checked={showNotes} onChange={(e) => setShowNotes(e.target.checked)} />
+      </label>
       <button className={btnPrimary} disabled={saving}>{saving ? "Kaydediliyor…" : "Kaydet"}</button>
       <button type="button" className={btnGhost} onClick={onSignOut}>Çıkış yap</button>
     </form>

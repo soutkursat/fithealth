@@ -26,8 +26,16 @@ export function formatDate(iso: string, opts: Intl.DateTimeFormatOptions = { day
   return new Intl.DateTimeFormat("tr-TR", { timeZone: "UTC", ...opts }).format(new Date(`${iso}T12:00:00Z`));
 }
 
+/** "8 Ekim" */
 export function shortDate(iso: string): string {
-  return formatDate(iso, { day: "numeric", month: "short" });
+  return formatDate(iso, { day: "numeric", month: "long" });
+}
+
+/** "Bugün", "Dün" ya da "8 Ekim Salı" */
+export function dayLabel(iso: string, today: string): string {
+  if (iso === today) return "Bugün";
+  if (iso === addDays(today, -1)) return "Dün";
+  return formatDate(iso, { day: "numeric", month: "long", weekday: "long" });
 }
 
 export function formatTime(ts: string): string {
@@ -38,7 +46,7 @@ export function formatDateTime(ts: string): string {
   return new Intl.DateTimeFormat("tr-TR", {
     timeZone: TZ,
     day: "numeric",
-    month: "short",
+    month: "long",
     hour: "2-digit",
     minute: "2-digit",
   }).format(new Date(ts));
@@ -47,4 +55,13 @@ export function formatDateTime(ts: string): string {
 /** Current hour in Istanbul, used to guess the meal. */
 export function istanbulHour(d: Date = new Date()): number {
   return Number(new Intl.DateTimeFormat("en-GB", { timeZone: TZ, hour: "2-digit", hour12: false }).format(d));
+}
+
+/** Türkçe bulunma eki: "Ağustos" → "Ağustos'ta", "Ekim" → "Ekim'de". */
+export function withLocative(word: string): string {
+  const lower = word.toLocaleLowerCase("tr-TR");
+  const vowels = lower.match(/[aıoueiöü]/g);
+  const back = vowels ? "aıou".includes(vowels[vowels.length - 1]) : true;
+  const hard = "fstkçşhp".includes(lower.at(-1) ?? "");
+  return `${word}'${hard ? "t" : "d"}${back ? "a" : "e"}`;
 }

@@ -3,24 +3,38 @@
 import { useEffect, useState } from "react";
 import { MEALS, type FoodLog } from "@/lib/types";
 import { kcal, num1 } from "@/lib/format";
+import { burn } from "@/lib/calc";
+import { BurnSection } from "./BurnSection";
 import { useAdmin } from "./context";
 
 export function DayLog() {
   const { supabase, date, toast, version, bump } = useAdmin();
   const [logs, setLogs] = useState<FoodLog[] | null>(null);
-  const [activity, setActivity] = useState<{ total_kcal: number | null; active_kcal: number | null; steps: number | null } | null>(null);
+  const [burned, setBurned] = useState<{ kcal: number | null; estimated: boolean } | null>(null);
+  const [steps, setSteps] = useState<number | null>(null);
   const [goal, setGoal] = useState<number | null>(null);
 
   useEffect(() => {
     let alive = true;
     Promise.all([
       supabase.from("food_logs").select("*").eq("log_date", date).order("eaten_at"),
-      supabase.from("daily_activity").select("total_kcal, active_kcal, steps").eq("log_date", date).maybeSingle(),
+      supabase.from("daily_summary").select("total_kcal, total_estimated, manual_total_kcal, extra_kcal, steps").eq("log_date", date).maybeSingle(),
       supabase.from("settings").select("daily_kcal_goal").eq("id", 1).maybeSingle(),
     ]).then(([l, a, s]) => {
       if (!alive) return;
       setLogs((l.data ?? []).map((r) => ({ ...r, kcal: Number(r.kcal) })) as FoodLog[]);
-      setActivity(a.data ?? null);
+      const r = a.data;
+      setBurned(
+        r
+          ? burn({
+              total_kcal: r.total_kcal == null ? null : Number(r.total_kcal),
+              total_estimated: r.total_estimated === true,
+              manual_total_kcal: r.manual_total_kcal == null ? null : Number(r.manual_total_kcal),
+              extra_kcal: r.extra_kcal == null ? null : Number(r.extra_kcal),
+            })
+          : null,
+      );
+      setSteps(r?.steps ?? null);
       setGoal(s.data?.daily_kcal_goal ?? null);
     });
     return () => {
@@ -42,14 +56,12 @@ export function DayLog() {
   return (
     <div className="flex flex-col gap-4">
       <div className="grid grid-cols-3 gap-2 text-center">
-        <Tile label="Alınan" value={kcal(total)} />
-        <Tile label="Harcanan" value={kcal(activity?.total_kcal)} />
-        <Tile label="Kalan" value={goal != null ? kcal(goal - total) : "—"} />
+        <Tile label="Yenilen" value={kcal(total)} />
+        <Tile label="Yakılan" value={burned?.kcal == null ? "—" : `${burned.estimated ? "~" : ""}${kcal(burned.kcal)}`} />
+        <Tile label="Kalan erzak" value={goal != null ? kcal(goal - total) : "—"} />
       </div>
-      {activity?.steps != null && (
-        <p className="text-center text-xs text-muted">Aktif {kcal(activity.active_kcal)} kcal · {kcal(activity.steps)} adım</p>
-      )}
-      {logs.length === 0 && <p className="card p-6 text-center text-sm text-muted">Bu gün için kayıt yok.</p>}
+      {steps != null && <p className="text-center text-xs text-muted">👣 {kcal(steps)} adım</p>}
+      {logs.length === 0 && <p className="card p-6 text-center text-sm text-muted">Bu gün sofraya bir şey kaydedilmemiş.</p>}
       {MEALS.map((m) => {
         const items = logs.filter((l) => l.meal === m.key);
         if (!items.length) return null;
@@ -76,6 +88,7 @@ export function DayLog() {
           </section>
         );
       })}
+      <BurnSection />
     </div>
   );
 }

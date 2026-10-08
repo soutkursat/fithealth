@@ -21,7 +21,7 @@ function TipContent({ active, payload }: TipProps) {
 
 export function WeightChart({ data, target }: { data: WeightPoint[]; target: number | null }) {
   if (data.length < 2) {
-    return <p className="py-10 text-center text-sm text-muted">Grafik için en az iki kilo kaydı gerekiyor.</p>;
+    return <p className="py-10 text-center text-sm text-muted">Grafiğin çizilmesi için en az iki tartı lazım.</p>;
   }
   const values = data.map((d) => d.kg).concat(target != null ? [target] : []);
   const min = Math.floor(Math.min(...values) - 1);
@@ -41,7 +41,7 @@ export function WeightChart({ data, target }: { data: WeightPoint[]; target: num
           <YAxis domain={[min, max]} tickLine={false} axisLine={false} tick={{ fill: "var(--muted)", fontSize: 11 }} tickFormatter={(v: number) => fmt.format(v)} width={48} allowDecimals={false} />
           <Tooltip content={(p) => <TipContent active={p.active} payload={p.payload} />} cursor={{ stroke: "var(--axis)" }} />
           {target != null && (
-            <ReferenceLine y={target} stroke="var(--good-mark)" strokeDasharray="4 4" label={{ value: `Hedef ${fmt.format(target)} kg`, position: "insideBottomRight", fill: "var(--ink-2)", fontSize: 11 }} />
+            <ReferenceLine y={target} stroke="var(--good-mark)" strokeDasharray="4 4" label={{ value: `Kızılelma ${fmt.format(target)} kg`, position: "insideBottomRight", fill: "var(--ink-2)", fontSize: 11 }} />
           )}
           <Area
             type="monotone"

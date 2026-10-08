@@ -2,7 +2,7 @@ import "server-only";
 import { connection } from "next/server";
 import { getPublicClient } from "./supabase";
 import { addDays, isoDate } from "./dates";
-import type { DailySummary, FoodLog, Settings, Weight } from "./types";
+import type { DailySummary, FoodLog, MotivationCounts, Note, Settings, Weight } from "./types";
 
 const DEFAULT_SETTINGS: Settings = {
   display_name: "Kurt",
@@ -10,6 +10,8 @@ const DEFAULT_SETTINGS: Settings = {
   start_weight: null,
   target_weight: null,
   start_date: null,
+  status_message: null,
+  show_notes: true,
 };
 
 const toNum = (v: unknown) => (v == null ? null : Number(v));
@@ -27,6 +29,8 @@ function normSummary(r: Record<string, unknown>): DailySummary {
     steps: toNum(r.steps),
     kg: toNum(r.kg),
     total_estimated: r.total_estimated === true,
+    manual_total_kcal: toNum(r.manual_total_kcal),
+    extra_kcal: toNum(r.extra_kcal),
   };
 }
 
@@ -50,16 +54,34 @@ async function getSettings(): Promise<Settings> {
     start_weight: toNum(data.start_weight),
     target_weight: toNum(data.target_weight),
     start_date: data.start_date ?? null,
+    status_message: data.status_message ?? null,
+    show_notes: data.show_notes ?? true,
   };
 }
 
-async function getLogs(date: string): Promise<FoodLog[]> {
+async function getLogs(from: string, to: string = from): Promise<FoodLog[]> {
   const { data } = await getPublicClient()
     .from("food_logs")
     .select("*")
-    .eq("log_date", date)
+    .gte("log_date", from)
+    .lte("log_date", to)
     .order("eaten_at", { ascending: true });
   return (data ?? []).map(normLog);
+}
+
+async function getNotes(): Promise<Note[]> {
+  const { data } = await getPublicClient()
+    .from("notes")
+    .select("id, name, message, created_at")
+    .order("created_at", { ascending: false })
+    .limit(12);
+  return (data ?? []) as Note[];
+}
+
+async function getMotivationCounts(): Promise<MotivationCounts> {
+  const { data } = await getPublicClient().rpc("motivation_counts");
+  const d = (data ?? {}) as Partial<MotivationCounts>;
+  return { today: Number(d.today ?? 0), total: Number(d.total ?? 0) };
 }
 
 async function getSummaries(from: string, to: string): Promise<DailySummary[]> {
@@ -109,6 +131,8 @@ export function fillDays(rows: DailySummary[], from: string, to: string): DailyS
         steps: null,
         kg: null,
         total_estimated: false,
+        manual_total_kcal: null,
+        extra_kcal: null,
       },
     );
   }
@@ -119,14 +143,26 @@ export async function getDashboard() {
   await connection();
   const today = isoDate();
   const from = addDays(today, -29);
-  const [settings, logs, summaries, weights, lastSync] = await Promise.all([
+  const [settings, weekLogs, summaries, weights, lastSync, notes, motivation] = await Promise.all([
     getSettings(),
-    getLogs(today),
+    getLogs(addDays(today, -7), today),
     getSummaries(from, today),
     getWeights(),
     getLastSync(),
+    getNotes(),
+    getMotivationCounts(),
   ]);
-  return { today, settings, logs, summaries: fillDays(summaries, from, today), weights, lastSync };
+  return {
+    today,
+    settings,
+    logs: weekLogs.filter((l) => l.log_date === today),
+    weekLogs,
+    summaries: fillDays(summaries, from, today),
+    weights,
+    lastSync,
+    notes: settings.show_notes ? notes : [],
+    motivation,
+  };
 }
 
 export async function getDay(date: string) {
@@ -142,14 +178,4 @@ export async function getHistory() {
   return { today, settings, summaries: summaries.reverse() };
 }
 
-/**
- * Energy balance for a day: intake minus total burn. Negative = deficit.
- * Only meaningful when both sides were recorded and the burn is real data
- * (not Health Connect's basal estimate).
- */
-export function balance(
-  s: Pick<DailySummary, "kcal_in" | "total_kcal" | "items" | "total_estimated">,
-): number | null {
-  if (s.total_kcal == null || s.total_estimated || s.items === 0) return null;
-  return Math.round(s.kcal_in - s.total_kcal);
-}
+export { balance } from "./calc";

@@ -14,7 +14,17 @@ export type AdminCtx = {
   /** Bumped after any write, so lists refetch. */
   version: number;
   bump: () => void;
+  goTo: (tab: Tab) => void;
 };
+
+export type Tab = "karargah" | "ekle" | "gun" | "kilo" | "ayarlar";
+
+/** Geçmişe dönük kayıt sınırı: bugünden 6 ay öncesine kadar. */
+export function minEntryDate(today: string): string {
+  const d = new Date(`${today}T12:00:00Z`);
+  d.setUTCMonth(d.getUTCMonth() - 6);
+  return d.toISOString().slice(0, 10);
+}
 
 export const AdminContext = createContext<AdminCtx | null>(null);
 

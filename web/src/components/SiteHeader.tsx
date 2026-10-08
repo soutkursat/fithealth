@@ -39,7 +39,7 @@ export function SiteFooter() {
       <div className="flex flex-wrap items-center justify-between gap-3 border-t border-line pt-5">
         <span className="flex items-center gap-2">
           <span aria-hidden>🐺</span>
-          Besin değerleri Open Food Facts, USDA ve kendi kayıtlarımızdan gelir; yaklaşıktır.
+          <span><b className="text-ink-2">Ne mutlu zayıflayana!</b> Besin değerleri Open Food Facts, USDA ve kendi kayıtlarımızdan gelir; yaklaşıktır.</span>
         </span>
         <Link href="/admin" className="rounded-full px-2 py-1 hover:text-ink-2">Panel</Link>
       </div>

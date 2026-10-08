@@ -123,11 +123,18 @@ Depo → **Settings → Secrets and variables → Actions** altında şunları e
 
 ## Sitede neler var
 
-- **Bugün** (`/`): kaybedilen kilo, hedefe ilerleme, alınan, harcanan ve denge (açık/fazla), kalan kalori hakkı, adım, makro dağılımı, öğün öğün yenilenler, son 14 günün kalori grafiği, kilo grafiği, son 7 gün tablosu
-- **Geçmiş** (`/gecmis`): tüm günler, ortalamalar, toplam kalori açığı ve bunun kabaca kaç kg yağa denk geldiği (7700 kcal ≈ 1 kg)
-- **Gün detayı** (`/gun/2026-10-08`): o günün tüm kayıtları
+- **Ana sayfa** (`/`): güncel kilo halkası, eriyen kilo, Kızılelma'ya (hedefe) kalan yol, **Kurt'a motivasyon yükle** butonu (kızgın kurt efekti + sayaç), **Kurt'a bir not gönder** formu (üyeliksiz), bugünün raporu, etkileşimli kalori grafiği (günün hesabı / yenilen-yakılan, 7-14-30 gün, güne dokununca açıklama), kilo seyri, açılır kapanır son 7 gün kartları
+- **Geçmiş** (`/gecmis`) ve **gün detayı** (`/gun/2026-10-08`)
 
-Telefon, tablet ve masaüstüne uyumlu; açık ve koyu temayı cihaz ayarına göre seçer.
+## Yönetim paneli (`/admin`)
+
+- **Karargâh:** öfke seviyesi (bugün kaç kez motive edildin), hedef kilo / günlük kalori sınırı / sitedeki sözün, gelen notlar (okundu, sitede gizle, sil). Yeni not ya da motivasyon gelince açılır bildirim penceresi çıkar (30 saniyede bir kontrol).
+- **Tarih seçici:** üstteki tarihe dokunup **6 aya kadar geriye** gidebilirsin; yemek, kilo ve yakılan kalori o güne girilir.
+- **Gün → Yakılan kalori:** telefondan gelen veri sadece gösterilir, değiştirilmez. Elle girdiklerin ayrı tutulur:
+  - *Ek aktivite* (telefonun görmediği spor vb.) toplama eklenir.
+  - *Günlük toplam* sadece telefondan gerçek veri gelmeyen günlerde kullanılır.
+
+> Bu özellikler için `supabase/schema.sql` dosyasını Supabase SQL Editor'da **bir kez daha** çalıştır. Var olan veriler silinmez.
 
 ## Yerelde çalıştırma
 
