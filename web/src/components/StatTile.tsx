@@ -43,7 +43,7 @@ export function StatTile({
       {meter && (
         <div className="h-1.5 w-full overflow-hidden rounded-full bg-white/[0.06]">
           <div
-            className={`bar-grow h-full rounded-full ${meter.over ? "bg-bad" : "bg-gradient-to-r from-[#5aa9ff] to-[#8b7bff]"}`}
+            className={`meter-fill bar-grow h-full rounded-full ${meter.over ? "bg-bad" : "bg-gradient-to-r from-[#5aa9ff] to-[#8b7bff]"}`}
             style={{ width: `${Math.min(100, Math.max(0, meter.pct))}%` }}
           />
         </div>

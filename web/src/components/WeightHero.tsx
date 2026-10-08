@@ -160,7 +160,7 @@ export function WeightHero({ name, current, currentDate, start, target, startDat
           <div className="mt-6 flex flex-wrap items-start gap-3">
             <MotivateButton initialToday={motivation.today} initialTotal={motivation.total} />
             <a
-              href="#istatistikler"
+              href="#kalori-cephesi"
               className="inline-flex items-center gap-2 rounded-full border border-line-strong bg-white/[0.04] px-5 py-3 text-sm font-bold transition hover:bg-white/[0.08]"
             >
               📊 Rakamlara in <span aria-hidden>↓</span>

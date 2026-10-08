@@ -13,6 +13,8 @@ export type RecentDay = {
   estimated: boolean;
   steps: number | null;
   kg: number | null;
+  /** Hareketle yakılan, alev günüyse (1000+). */
+  fire: number | null;
   protein: number;
   carbs: number;
   fat: number;
@@ -39,7 +41,11 @@ export function RecentDays({ days }: { days: RecentDay[] }) {
               ? { text: `−${fmt.format(Math.abs(d.bal))} açık`, cls: "bg-good/15 text-good ring-1 ring-good/30" }
               : { text: `+${fmt.format(d.bal)} fazla`, cls: "bg-bad/15 text-bad ring-1 ring-bad/30" };
         return (
-          <li key={d.date} className="glass glass-hover reveal overflow-hidden" style={{ ["--d" as string]: `${i * 50}ms` }}>
+          <li
+            key={d.date}
+            className={`glass glass-hover reveal overflow-hidden ${d.fire != null ? "border-[#ff8a3c]/40 shadow-[0_0_28px_-10px_rgba(255,90,30,0.8)]" : ""}`}
+            style={{ ["--d" as string]: `${i * 50}ms` }}
+          >
             <button
               type="button"
               className="flex w-full flex-col gap-3 p-4 text-left sm:p-5"
@@ -47,7 +53,14 @@ export function RecentDays({ days }: { days: RecentDay[] }) {
               aria-expanded={isOpen}
             >
               <div className="flex items-center justify-between gap-3">
-                <span className="font-bold">{d.label}</span>
+                <span className="flex items-center gap-2 font-bold">
+                  {d.label}
+                  {d.fire != null && (
+                    <span className="rounded-full bg-[#ff4d2e]/15 px-2 py-0.5 text-[11px] font-bold text-[#ff9a5c] ring-1 ring-[#ff4d2e]/40" title={`Hareketle ${fmt.format(d.fire)} kcal`}>
+                      <span className="flame-icon" aria-hidden>🔥</span> Alev günü
+                    </span>
+                  )}
+                </span>
                 <span className="flex items-center gap-2">
                   <span className={`rounded-full px-2.5 py-1 text-xs font-bold ${verdict.cls}`}>{verdict.text}</span>
                   <span aria-hidden className={`text-muted transition ${isOpen ? "rotate-90" : ""}`}>›</span>

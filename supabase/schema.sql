@@ -242,7 +242,11 @@ grant insert, update, delete on public.manual_burns, public.manual_day_totals to
 grant select (id, name, message, hidden, created_at) on public.notes to anon;
 grant select, update, delete on public.notes to authenticated;
 grant select, delete on public.motivations to authenticated;
-grant execute on function public.motivation_counts() to anon, authenticated;
+grant execute on function public.motivation_counts() to anon, authenticated, service_role;
+-- Sunucu (service_role) tüm tablolara yazabilmeli; bazı yeni projelerde bu izin otomatik gelmiyor.
+grant usage on schema public to service_role;
+grant all on all tables in schema public to service_role;
+grant usage, select on all sequences in schema public to service_role;
 grant usage, select on all sequences in schema public to authenticated;
 
 do $$

@@ -7,7 +7,8 @@ import { MacroBar } from "@/components/MacroBar";
 import { MealList } from "@/components/MealList";
 import { PageSkeleton, SetupNotice } from "@/components/Setup";
 import { getDay } from "@/lib/data";
-import { balance, burn } from "@/lib/calc";
+import { activeBurn, balance, burn, isFireDay } from "@/lib/calc";
+import { FireBanner } from "@/components/FireBanner";
 import { isConfigured } from "@/lib/supabase";
 import { addDays, formatDate, isValidIsoDate } from "@/lib/dates";
 import { kcal, num1 } from "@/lib/format";
@@ -37,10 +38,11 @@ async function Day({ date }: { date: string }) {
   const { settings, logs, summary } = await getDay(date);
   const b = balance(summary);
   const bu = burn(summary);
+  const fire = isFireDay(summary);
   const nav = "rounded-full border border-line bg-white/[0.03] px-3.5 py-1.5 text-sm font-medium transition hover:bg-white/[0.07] hover:text-ink";
 
   return (
-    <div className="flex flex-col gap-5">
+    <div className={`flex flex-col gap-5 ${fire ? "on-fire" : ""}`}>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="reveal text-2xl font-extrabold tracking-tight sm:text-3xl">{formatDate(date, { day: "numeric", month: "long", year: "numeric", weekday: "long" })}</h1>
         <div className="flex gap-2">
@@ -48,6 +50,7 @@ async function Day({ date }: { date: string }) {
           <Link className={nav} href={`/gun/${addDays(date, 1)}`}>Sonraki gün →</Link>
         </div>
       </div>
+      {fire && <FireBanner kcal={activeBurn(summary) ?? 0} when="Bu gün" />}
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <StatTile label="Yenilen" swatch="in" icon="fork" value={kcal(summary.kcal_in)} unit="kcal" hint={`Günlük sınır ${kcal(settings.daily_kcal_goal)} kcal`} />
         <StatTile

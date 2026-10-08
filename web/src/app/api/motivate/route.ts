@@ -3,7 +3,12 @@ import { sinceIso, visitorHash } from "@/lib/visitor";
 
 /** "Kurt'a motivasyon yükle!" tıklaması. */
 export async function POST(req: Request) {
-  const supabase = getAdminClient();
+  let supabase;
+  try {
+    supabase = getAdminClient();
+  } catch {
+    return Response.json({ ok: false, error: "SUPABASE_SERVICE_ROLE_KEY eksik" }, { status: 500 });
+  }
   const ip_hash = visitorHash(req);
   const { count } = await supabase
     .from("motivations")
@@ -13,6 +18,7 @@ export async function POST(req: Request) {
   let saved = false;
   if ((count ?? 0) < 30) {
     const { error } = await supabase.from("motivations").insert({ ip_hash });
+    if (error) console.error("motivate insert", error);
     saved = !error;
   }
   const { data } = await supabase.rpc("motivation_counts");

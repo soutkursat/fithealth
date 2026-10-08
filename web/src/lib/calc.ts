@@ -42,3 +42,16 @@ export function balance(s: BurnInput & Pick<DailySummary, "kcal_in" | "items">):
   if (b.kcal == null || b.estimated || s.items === 0) return null;
   return Math.round(s.kcal_in - b.kcal);
 }
+
+/** Hareketle yakılan kalori bu sınırı geçerse gün "alev alev" gösterilir. */
+export const FIRE_KCAL = 1000;
+
+/** Hareketle yakılan (telefonun aktif kalorisi + elle eklenen ek aktivite). */
+export function activeBurn(s: Pick<DailySummary, "active_kcal" | "extra_kcal">): number | null {
+  if (s.active_kcal == null && s.extra_kcal == null) return null;
+  return (s.active_kcal ?? 0) + (s.extra_kcal ?? 0);
+}
+
+export function isFireDay(s: Pick<DailySummary, "active_kcal" | "extra_kcal">): boolean {
+  return (activeBurn(s) ?? 0) >= FIRE_KCAL;
+}

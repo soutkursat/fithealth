@@ -17,18 +17,35 @@ const ROARS = [
   "AUUUUUU! 🐺🔥",
 ];
 
+/** Her basışta butonda yazan şey (0 = boşta). */
+const STEPS = [
+  "Kurt'a motivasyon yükle!",
+  "Kurt kulak kabarttı…",
+  "Tüyler diken diken…",
+  "Dişler göründü…",
+  "Bir gaz daha, salıyoruz!",
+];
+const CHARGE = 5;
+/** Boşta kalınca dolum sıfırlanır. */
+const IDLE_MS = 6000;
+
+/** Yazı uzunluğuna göre ekranda kalma süresi (okunabilsin diye). */
+function readMs(text: string): number {
+  return Math.min(6000, Math.max(2600, 1600 + text.length * 70));
+}
+
 const fmt = new Intl.NumberFormat("tr-TR");
 
 export function MotivateButton({ initialToday, initialTotal }: { initialToday: number; initialTotal: number }) {
   const [today, setToday] = useState(initialToday);
   const [total, setTotal] = useState(initialTotal);
-  const [fx, setFx] = useState(0);
-  const [roar, setRoar] = useState(ROARS[0]);
-  const [combo, setCombo] = useState(0);
+  const [charge, setCharge] = useState(0);
+  const [fx, setFx] = useState<{ id: number; roar: string; ms: number } | null>(null);
   const [mounted, setMounted] = useState(false);
-  const comboTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const idleTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const sent = useRef<number[]>([]);
+  const lastRoar = useRef("");
+  const btnRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     // Portal hedefi (document) sadece tarayıcıda var.
@@ -36,62 +53,78 @@ export function MotivateButton({ initialToday, initialTotal }: { initialToday: n
     return () => cancelAnimationFrame(id);
   }, []);
 
-  function motivate() {
-    setFx((n) => n + 1);
-    setRoar((prev) => {
-      let next = prev;
-      while (next === prev) next = ROARS[Math.floor(Math.random() * ROARS.length)];
-      return next;
-    });
+  function release() {
+    let roar = lastRoar.current;
+    while (roar === lastRoar.current) roar = ROARS[Math.floor(Math.random() * ROARS.length)];
+    lastRoar.current = roar;
+    const ms = readMs(roar);
+    setFx({ id: Date.now(), roar, ms });
     setToday((n) => n + 1);
     setTotal((n) => n + 1);
-    setCombo((c) => c + 1);
-    navigator.vibrate?.([60, 40, 90]);
+    navigator.vibrate?.([80, 40, 120]);
 
-    // Sayfayı salla
     const main = document.querySelector("main");
     if (main) {
       main.classList.remove("page-shake");
       void (main as HTMLElement).offsetWidth;
       main.classList.add("page-shake");
     }
-
-    if (comboTimer.current) clearTimeout(comboTimer.current);
-    comboTimer.current = setTimeout(() => setCombo(0), 2600);
     if (hideTimer.current) clearTimeout(hideTimer.current);
-    hideTimer.current = setTimeout(() => setFx(0), 1750);
+    hideTimer.current = setTimeout(() => setFx(null), ms + 100);
 
-    // Sunucuya bildir (dakikada en fazla 30)
-    const now = Date.now();
-    sent.current = sent.current.filter((t) => now - t < 60_000);
-    if (sent.current.length < 30) {
-      sent.current.push(now);
-      fetch("/api/motivate", { method: "POST" })
-        .then((r) => (r.ok ? r.json() : null))
-        .then((d: { today?: number; total?: number } | null) => {
-          if (!d) return;
-          setToday((n) => Math.max(n, d.today ?? 0));
-          setTotal((n) => Math.max(n, d.total ?? 0));
-        })
-        .catch(() => undefined);
+    fetch("/api/motivate", { method: "POST" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d: { today?: number; total?: number } | null) => {
+        if (!d) return;
+        setToday((n) => Math.max(n, d.today ?? 0));
+        setTotal((n) => Math.max(n, d.total ?? 0));
+      })
+      .catch(() => undefined);
+  }
+
+  function press() {
+    if (fx) return; // efekt bitmeden yeni yükleme yok
+    const next = charge + 1;
+    navigator.vibrate?.(25);
+    const b = btnRef.current;
+    if (b) {
+      b.classList.remove("btn-thump");
+      void b.offsetWidth;
+      b.classList.add("btn-thump");
+    }
+    if (idleTimer.current) clearTimeout(idleTimer.current);
+    if (next >= CHARGE) {
+      setCharge(0);
+      release();
+    } else {
+      setCharge(next);
+      idleTimer.current = setTimeout(() => setCharge(0), IDLE_MS);
     }
   }
 
-  const rage = Math.min(combo / 8, 1);
+  const pct = (charge / CHARGE) * 100;
 
   return (
     <>
-      <div className="flex flex-col items-start gap-1.5">
+      <div className="flex w-full flex-col items-start gap-1.5 sm:w-auto">
         <button
+          ref={btnRef}
           type="button"
-          onClick={motivate}
-          className="ember group relative inline-flex items-center gap-2 overflow-hidden rounded-full bg-gradient-to-r from-[#ff4d2e] via-[#ff6a2b] to-[#ffab2e] px-5 py-3 text-base font-extrabold text-[#1a0603] transition active:scale-95 sm:px-6"
+          onClick={press}
+          aria-label={`Kurt'a motivasyon yükle (${charge}/${CHARGE})`}
+          className="ember relative w-full overflow-hidden rounded-full bg-gradient-to-r from-[#ff4d2e] via-[#ff6a2b] to-[#ffab2e] px-5 py-3 text-left text-base font-extrabold text-[#1a0603] transition active:scale-95 sm:w-[22rem] sm:px-6"
         >
-          <span className="text-xl transition-transform group-active:scale-125" aria-hidden>🔥</span>
-          Kurt&apos;a motivasyon yükle!
-          {combo > 1 && (
-            <span className="rounded-full bg-black/25 px-2 py-0.5 text-xs font-black text-white">x{combo}</span>
-          )}
+          {/* Yükleme barı (düşük opaklık) */}
+          <span
+            aria-hidden
+            className="absolute inset-y-0 left-0 bg-white/30 transition-[width] duration-300 ease-out"
+            style={{ width: `${pct}%` }}
+          />
+          <span className="relative flex items-center gap-2">
+            <span className="text-xl" aria-hidden>🔥</span>
+            <span className="min-w-0 flex-1 leading-tight">{STEPS[charge]}</span>
+            {charge > 0 && <span className="shrink-0 rounded-full bg-black/20 px-2 py-0.5 text-xs font-black text-white">{charge}/{CHARGE}</span>}
+          </span>
         </button>
         <span className="pl-2 text-xs text-muted" aria-live="polite">
           Bugün <b className="text-ink">{fmt.format(today)}</b> kez gaz verildi · toplam {fmt.format(total)}
@@ -99,29 +132,22 @@ export function MotivateButton({ initialToday, initialTotal }: { initialToday: n
       </div>
 
       {mounted &&
+        fx &&
         createPortal(
-          <>
-            {/* Kombo arttıkça site kızarır */}
-            <div
-              aria-hidden
-              className="pointer-events-none fixed inset-0 z-[90] transition-opacity duration-700"
-              style={{
-                opacity: rage,
-                background: "radial-gradient(ellipse at 50% 0%, rgba(255,40,20,0.35), rgba(120,0,0,0.25) 50%, transparent 80%)",
-              }}
-            />
-            {fx > 0 && (
-              <div key={fx} aria-hidden className="pointer-events-none fixed inset-0 z-[100] grid place-items-center">
-                <div className="rage-flash absolute inset-0" />
-                <div className="relative flex flex-col items-center gap-4 px-6">
-                  <div className="wolf-shake">
-                    <AngryWolf className="wolf-zoom h-[min(58vh,420px)] w-auto" />
-                  </div>
-                  <p className="roar-pop max-w-md text-center text-2xl font-black uppercase tracking-wide text-white sm:text-4xl">{roar}</p>
-                </div>
-              </div>
-            )}
-          </>,
+          <div
+            key={fx.id}
+            aria-hidden
+            className="pointer-events-none fixed inset-0 z-[100] flex flex-col items-center justify-center gap-5 overflow-hidden px-4"
+            style={{ ["--fx-ms" as string]: `${fx.ms}ms` }}
+          >
+            <div className="rage-flash absolute inset-0" />
+            <div className="wolf-shake relative flex w-full justify-center">
+              <AngryWolf className="wolf-zoom block h-auto w-[min(72vw,52vh,380px)]" />
+            </div>
+            <p className="roar-pop relative w-full max-w-[min(92vw,34rem)] text-balance break-words text-center text-2xl font-black uppercase leading-tight tracking-wide text-white sm:text-4xl">
+              {fx.roar}
+            </p>
+          </div>,
           document.body,
         )}
     </>

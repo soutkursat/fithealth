@@ -11,7 +11,8 @@ import { NotesSection } from "@/components/NotesSection";
 import { WeightChart } from "@/components/WeightChart";
 import { PageSkeleton, SetupNotice } from "@/components/Setup";
 import { getDashboard } from "@/lib/data";
-import { balance, burn } from "@/lib/calc";
+import { activeBurn, balance, burn, isFireDay } from "@/lib/calc";
+import { FireBanner } from "@/components/FireBanner";
 import { isConfigured } from "@/lib/supabase";
 import { dayLabel, formatDate, formatDateTime, shortDate } from "@/lib/dates";
 import { kcal } from "@/lib/format";
@@ -41,6 +42,7 @@ async function Dashboard() {
   const remaining = settings.daily_kcal_goal - kcalIn;
   const todayBurn = burn(todaySum);
   const bal = balance({ ...todaySum, kcal_in: kcalIn, items: logs.length });
+  const onFire = isFireDay(todaySum);
 
   // Kilo
   const last = weights.at(-1);
@@ -86,6 +88,7 @@ async function Dashboard() {
         estimated: b.estimated,
         steps: s.steps,
         kg: s.kg,
+        fire: isFireDay(s) ? activeBurn(s) : null,
         protein: s.protein,
         carbs: s.carbs,
         fat: s.fat,
@@ -112,10 +115,8 @@ async function Dashboard() {
         motivation={motivation}
       />
 
-      {settings.show_notes && <NotesSection initialNotes={notes} />}
-
       {/* Bugün */}
-      <section id="istatistikler" className="flex flex-col gap-4">
+      <section id="bugun" className={`flex flex-col gap-4 ${onFire ? "on-fire" : ""}`}>
         <SectionTitle
           title="Bugünün cephe raporu"
           sub={formatDate(today)}
@@ -128,6 +129,7 @@ async function Dashboard() {
             )
           }
         />
+        {onFire && <FireBanner kcal={activeBurn(todaySum) ?? 0} />}
         <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
           <StatTile
             label="Yenilen"
@@ -187,8 +189,10 @@ async function Dashboard() {
         <MealList logs={logs} emptyText="Bugün sofraya henüz oturulmadı (ya da Kurt saklıyor 😏)" />
       </section>
 
+      {settings.show_notes && <NotesSection initialNotes={notes} />}
+
       {/* Kalori */}
-      <section className="glass reveal p-4 sm:p-6">
+      <section id="kalori-cephesi" className="glass reveal p-4 sm:p-6">
         <h2 className="text-xl font-bold tracking-tight">Kalori cephesi</h2>
         <p className="mb-4 text-sm text-ink-2">Her günün hesabı: yenilen eksi yakılan. Bir çubuğa dokun, o günü anlatayım.</p>
         <CalorieExplorer days={explorer} goal={settings.daily_kcal_goal} />
