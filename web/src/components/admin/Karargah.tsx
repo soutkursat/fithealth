@@ -9,7 +9,7 @@ import { btnPrimary, inputCls, useAdmin } from "./context";
 import type { Inbox } from "./MotivationPopup";
 
 type NoteRow = { id: number; name: string; message: string; hidden: boolean; read_at: string | null; created_at: string };
-type Goals = { target_weight: string; daily_kcal_goal: string; status_message: string };
+type Goals = { target_weight: string; daily_kcal_goal: string; status_message: string; water_goal_ml: string; protein_goal_g: string };
 
 const fmt = new Intl.NumberFormat("tr-TR");
 
@@ -18,7 +18,7 @@ export function Karargah({ inbox, onInboxChange }: { inbox: Inbox; onInboxChange
   const [counts, setCounts] = useState<{ today: number; total: number } | null>(null);
   const [notes, setNotes] = useState<NoteRow[]>([]);
   const [current, setCurrent] = useState<number | null>(null);
-  const [goals, setGoals] = useState<Goals>({ target_weight: "", daily_kcal_goal: "", status_message: "" });
+  const [goals, setGoals] = useState<Goals>({ target_weight: "", daily_kcal_goal: "", status_message: "", water_goal_ml: "", protein_goal_g: "" });
   const [filter, setFilter] = useState<"hepsi" | "yeni">("yeni");
 
   useEffect(() => {
@@ -27,7 +27,7 @@ export function Karargah({ inbox, onInboxChange }: { inbox: Inbox; onInboxChange
       supabase.rpc("motivation_counts"),
       supabase.from("notes").select("id, name, message, hidden, read_at, created_at").order("created_at", { ascending: false }).limit(50),
       supabase.from("weights").select("kg").order("log_date", { ascending: false }).limit(1).maybeSingle(),
-      supabase.from("settings").select("target_weight, daily_kcal_goal, status_message").eq("id", 1).maybeSingle(),
+      supabase.from("settings").select("target_weight, daily_kcal_goal, status_message, water_goal_ml, protein_goal_g").eq("id", 1).maybeSingle(),
     ]).then(([c, n, w, s]) => {
       if (!alive) return;
       const d = (c.data ?? {}) as { today?: number; total?: number };
@@ -39,6 +39,8 @@ export function Karargah({ inbox, onInboxChange }: { inbox: Inbox; onInboxChange
           target_weight: s.data.target_weight == null ? "" : String(s.data.target_weight),
           daily_kcal_goal: String(s.data.daily_kcal_goal ?? ""),
           status_message: s.data.status_message ?? "",
+          water_goal_ml: String(s.data.water_goal_ml ?? 2500),
+          protein_goal_g: String(s.data.protein_goal_g ?? 120),
         });
       }
     });
@@ -81,6 +83,8 @@ export function Karargah({ inbox, onInboxChange }: { inbox: Inbox; onInboxChange
         target_weight: num(goals.target_weight),
         daily_kcal_goal: Math.round(num(goals.daily_kcal_goal) ?? 2000),
         status_message: goals.status_message.trim() || null,
+        water_goal_ml: Math.round(num(goals.water_goal_ml) ?? 2500),
+        protein_goal_g: Math.round(num(goals.protein_goal_g) ?? 120),
         updated_at: new Date().toISOString(),
       })
       .eq("id", 1);
@@ -138,6 +142,16 @@ export function Karargah({ inbox, onInboxChange }: { inbox: Inbox; onInboxChange
           <label className="flex flex-col gap-1 text-sm font-medium">
             Günlük kalori sınırı
             <input className={inputCls} inputMode="numeric" value={goals.daily_kcal_goal} onChange={(e) => setGoals((g) => ({ ...g, daily_kcal_goal: e.target.value }))} />
+          </label>
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <label className="flex flex-col gap-1 text-sm font-medium">
+            Su hedefi (ml)
+            <input className={inputCls} inputMode="numeric" value={goals.water_goal_ml} onChange={(e) => setGoals((g) => ({ ...g, water_goal_ml: e.target.value }))} />
+          </label>
+          <label className="flex flex-col gap-1 text-sm font-medium">
+            Protein hedefi (g)
+            <input className={inputCls} inputMode="numeric" value={goals.protein_goal_g} onChange={(e) => setGoals((g) => ({ ...g, protein_goal_g: e.target.value }))} />
           </label>
         </div>
         <label className="flex flex-col gap-1 text-sm font-medium">

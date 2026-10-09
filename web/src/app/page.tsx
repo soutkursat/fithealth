@@ -11,8 +11,9 @@ import { NotesSection } from "@/components/NotesSection";
 import { WeightChart } from "@/components/WeightChart";
 import { PageSkeleton, SetupNotice } from "@/components/Setup";
 import { getDashboard } from "@/lib/data";
-import { activeBurn, balance, burn, isFireDay } from "@/lib/calc";
+import { activeBurn, balance, burn, isFireDay, projectGoal } from "@/lib/calc";
 import { FireBanner } from "@/components/FireBanner";
+import { WaterProtein } from "@/components/WaterProtein";
 import { isConfigured } from "@/lib/supabase";
 import { dayLabel, formatDate, formatDateTime, shortDate } from "@/lib/dates";
 import { kcal } from "@/lib/format";
@@ -88,6 +89,7 @@ async function Dashboard() {
         estimated: b.estimated,
         steps: s.steps,
         kg: s.kg,
+        water: s.water_ml,
         fire: isFireDay(s) ? activeBurn(s) : null,
         protein: s.protein,
         carbs: s.carbs,
@@ -96,6 +98,12 @@ async function Dashboard() {
       };
     });
 
+  const projection = projectGoal(
+    weights,
+    settings.target_weight,
+    today,
+    summaries.slice(-15, -1).map(balance).filter((b): b is number => b != null),
+  );
   const weightPoints = weights.map((w) => ({ date: w.log_date, label: shortDate(w.log_date), kg: w.kg }));
   const goalPct = settings.daily_kcal_goal > 0 ? (kcalIn / settings.daily_kcal_goal) * 100 : 0;
 
@@ -113,6 +121,7 @@ async function Dashboard() {
         streak={streak}
         statusMessage={settings.status_message}
         motivation={motivation}
+        projection={projection}
       />
 
       {/* Bugün */}
@@ -177,6 +186,12 @@ async function Dashboard() {
             delay={240}
           />
         </div>
+        <WaterProtein
+          waterMl={todaySum.water_ml}
+          waterGoal={settings.water_goal_ml}
+          protein={logs.reduce((t, l) => t + (l.protein ?? 0), 0)}
+          proteinGoal={settings.protein_goal_g}
+        />
         {kcalIn > 0 && (
           <div className="glass reveal p-4 sm:p-5" style={{ ["--d" as string]: "300ms" }}>
             <MacroBar
@@ -201,8 +216,12 @@ async function Dashboard() {
       {/* Kilo */}
       <section className="glass reveal p-4 sm:p-6">
         <h2 className="text-xl font-bold tracking-tight">Kilo seyri</h2>
-        <p className="mb-4 text-sm text-ink-2">Bütün tartılar; kesikli çizgi Kızılelma.</p>
-        <WeightChart data={weightPoints} target={settings.target_weight} />
+        <p className="mb-4 text-sm text-ink-2">Bütün tartılar. Yeşil kesikli çizgi Kızılelma, mavi kesikli çizgi bu hızla gidilirse.</p>
+        <WeightChart
+          data={weightPoints}
+          target={settings.target_weight}
+          eta={projection.status === "ok" && projection.days <= 365 ? { date: projection.etaDate, label: shortDate(projection.etaDate) } : null}
+        />
       </section>
 
       {/* Son günler */}

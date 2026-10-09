@@ -15,6 +15,8 @@ export type Settings = {
   start_date: string | null;
   status_message: string | null;
   show_notes: boolean;
+  water_goal_ml: number;
+  protein_goal_g: number;
 };
 
 export type FoodLog = {
@@ -51,6 +53,7 @@ export type DailySummary = {
   manual_total_kcal: number | null;
   /** Admin-entered extra activity, added on top of the day's burn. */
   extra_kcal: number | null;
+  water_ml: number;
 };
 
 export type Note = { id: number; name: string; message: string; created_at: string };

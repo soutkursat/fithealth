@@ -12,6 +12,8 @@ const DEFAULT_SETTINGS: Settings = {
   start_date: null,
   status_message: null,
   show_notes: true,
+  water_goal_ml: 2500,
+  protein_goal_g: 120,
 };
 
 const toNum = (v: unknown) => (v == null ? null : Number(v));
@@ -31,6 +33,7 @@ function normSummary(r: Record<string, unknown>): DailySummary {
     total_estimated: r.total_estimated === true,
     manual_total_kcal: toNum(r.manual_total_kcal),
     extra_kcal: toNum(r.extra_kcal),
+    water_ml: Number(r.water_ml ?? 0),
   };
 }
 
@@ -56,6 +59,8 @@ async function getSettings(): Promise<Settings> {
     start_date: data.start_date ?? null,
     status_message: data.status_message ?? null,
     show_notes: data.show_notes ?? true,
+    water_goal_ml: Number(data.water_goal_ml ?? DEFAULT_SETTINGS.water_goal_ml),
+    protein_goal_g: Number(data.protein_goal_g ?? DEFAULT_SETTINGS.protein_goal_g),
   };
 }
 
@@ -133,6 +138,7 @@ export function fillDays(rows: DailySummary[], from: string, to: string): DailyS
         total_estimated: false,
         manual_total_kcal: null,
         extra_kcal: null,
+        water_ml: 0,
       },
     );
   }

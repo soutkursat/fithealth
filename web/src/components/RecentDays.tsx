@@ -13,6 +13,7 @@ export type RecentDay = {
   estimated: boolean;
   steps: number | null;
   kg: number | null;
+  water: number;
   /** Hareketle yakılan, alev günüyse (1000+). */
   fire: number | null;
   protein: number;
@@ -73,6 +74,8 @@ export function RecentDays({ days }: { days: RecentDay[] }) {
               <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted">
                 {d.steps != null && <span>👣 {fmt.format(d.steps)} adım</span>}
                 {d.kg != null && <span>⚖️ {fmt1.format(d.kg)} kg</span>}
+                {d.water > 0 && <span>💧 {fmt1.format(d.water / 1000)} L</span>}
+                {d.protein > 0 && <span>🥩 {fmt.format(d.protein)} g protein</span>}
                 {d.foods.length > 0 && <span>🍽️ {d.foods.length} kalem</span>}
               </div>
             </button>

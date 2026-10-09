@@ -6,6 +6,7 @@ import { kcal } from "@/lib/format";
 import { BarcodeScanner } from "./BarcodeScanner";
 import { PortionSheet, MealPicker, Sheet } from "./PortionSheet";
 import { ProductForm } from "./ProductForm";
+import { WaterQuick } from "./WaterQuick";
 import { api, btnGhost, btnPrimary, guessMeal, inputCls, useAdmin } from "./context";
 
 type BarcodeResponse = { status: "found" | "partial" | "not_found"; product: Product | null };
@@ -159,6 +160,7 @@ export function AddFood() {
 
   return (
     <div className="flex flex-col gap-4">
+      <WaterQuick />
       <MealPicker value={meal} onChange={setMeal} />
 
       <div className="grid grid-cols-2 gap-3">

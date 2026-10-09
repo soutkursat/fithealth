@@ -136,6 +136,29 @@ Depo → **Settings → Secrets and variables → Actions** altında şunları e
 
 > Bu özellikler için `supabase/schema.sql` dosyasını Supabase SQL Editor'da **bir kez daha** çalıştır. Var olan veriler silinmez.
 
+## Kızılelma tahmini, su ve protein
+
+- **"Bu hızla Kızılelma'ya ne zaman?"**: Son 6 haftanın tartılarına doğrusal bir eğilim çizgisi oturtulur (en az 3 tartı, en az 7 gün aralık). Tartı yetmezse son 2 haftanın kalori hesabı kullanılır (7700 kcal ≈ 1 kg). Kilo grafiğinde mavi kesikli çizgi olarak da görünür.
+- **Su:** Panelde Ekle ve Gün sekmelerinde "+1 bardak (250 ml)" ve "+½ litre" düğmeleri, ↶ ile son kaydı geri alma.
+- **Protein:** Yediklerinden otomatik toplanır.
+- Hedefler (su ml, protein g) Karargâh → Hedefler'den değişir.
+
+## Yedekleme (haftalık, şifreli)
+
+Supabase'in ücretsiz planı otomatik yedek almaz. Bu depoda her pazar gecesi çalışan bir GitHub Actions görevi var
+(`.github/workflows/yedek.yml`). Verileri indirir, **senin parolanla AES-256 ile şifreler** ve
+**Releases → "Veri yedekleri"** sayfasına yükler. Son 26 yedek (~6 ay) saklanır. Depo herkese açık olduğu için şifresiz yedek asla konmaz.
+
+**Kurulum (bir kerelik):** Depo → **Settings → Secrets and variables → Actions → New repository secret**:
+
+| Secret | Değer |
+|---|---|
+| `SUPABASE_URL` | Supabase Project URL (Vercel'deki `NEXT_PUBLIC_SUPABASE_URL` ile aynı) |
+| `SUPABASE_SERVICE_ROLE_KEY` | Vercel'deki ile aynı service_role anahtarı |
+| `BACKUP_PASSWORD` | Uzun bir parola. **Bunu kaybedersen yedekler açılamaz**, bir yere not et. |
+
+Sonra **Actions → Veri yedeği → Run workflow** ile ilk yedeği hemen al. Geri yükleme adımları: [`scripts/yedek/README.md`](scripts/yedek/README.md).
+
 ## Yerelde çalıştırma
 
 ```bash

@@ -1,5 +1,7 @@
 import { WolfMark } from "./Wolf";
 import { MotivateButton } from "./MotivateButton";
+import { GoalForecast } from "./GoalForecast";
+import type { GoalProjection } from "@/lib/calc";
 import { Icon } from "./Icon";
 import { formatDate, withLocative } from "@/lib/dates";
 import { KCAL_PER_KG, kcal, num1 } from "@/lib/format";
@@ -17,12 +19,13 @@ type Props = {
   streak: number;
   statusMessage: string | null;
   motivation: { today: number; total: number };
+  projection: GoalProjection;
 };
 
 const R = 92;
 const LEN = 2 * Math.PI * R;
 
-export function WeightHero({ name, current, currentDate, start, target, startDate, deficit, trackedDays, streak, statusMessage, motivation }: Props) {
+export function WeightHero({ name, current, currentDate, start, target, startDate, deficit, trackedDays, streak, statusMessage, motivation, projection }: Props) {
   const fury = motivation.today >= 10;
   const lost = start != null && current != null ? start - current : null;
   const remaining = current != null && target != null ? Math.max(0, current - target) : null;
@@ -132,6 +135,8 @@ export function WeightHero({ name, current, currentDate, start, target, startDat
               </div>
             </div>
           )}
+
+          <GoalForecast p={projection} />
 
           {statusMessage && (
             <blockquote className="mt-5 border-l-2 border-accent/60 pl-3 text-sm italic text-ink-2">

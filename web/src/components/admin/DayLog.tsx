@@ -5,6 +5,7 @@ import { MEALS, type FoodLog } from "@/lib/types";
 import { kcal, num1 } from "@/lib/format";
 import { burn } from "@/lib/calc";
 import { BurnSection } from "./BurnSection";
+import { WaterQuick } from "./WaterQuick";
 import { useAdmin } from "./context";
 
 export function DayLog() {
@@ -61,6 +62,7 @@ export function DayLog() {
         <Tile label="Kalan erzak" value={goal != null ? kcal(goal - total) : "—"} />
       </div>
       {steps != null && <p className="text-center text-xs text-muted">👣 {kcal(steps)} adım</p>}
+      <WaterQuick />
       {logs.length === 0 && <p className="card p-6 text-center text-sm text-muted">Bu gün sofraya bir şey kaydedilmemiş.</p>}
       {MEALS.map((m) => {
         const items = logs.filter((l) => l.meal === m.key);

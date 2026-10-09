@@ -9,6 +9,7 @@ import { PageSkeleton, SetupNotice } from "@/components/Setup";
 import { getDay } from "@/lib/data";
 import { activeBurn, balance, burn, isFireDay } from "@/lib/calc";
 import { FireBanner } from "@/components/FireBanner";
+import { WaterProtein } from "@/components/WaterProtein";
 import { isConfigured } from "@/lib/supabase";
 import { addDays, formatDate, isValidIsoDate } from "@/lib/dates";
 import { kcal, num1 } from "@/lib/format";
@@ -70,6 +71,7 @@ async function Day({ date }: { date: string }) {
         />
         <StatTile label="Kilo" icon="target" value={summary.kg != null ? num1(summary.kg) : "—"} unit={summary.kg != null ? "kg" : undefined} hint={summary.steps != null ? `${kcal(summary.steps)} adım` : undefined} />
       </div>
+      <WaterProtein waterMl={summary.water_ml} waterGoal={settings.water_goal_ml} protein={summary.protein} proteinGoal={settings.protein_goal_g} />
       {summary.kcal_in > 0 && (
         <div className="glass reveal p-4 sm:p-5">
           <MacroBar protein={summary.protein} carbs={summary.carbs} fat={summary.fat} />

@@ -34,6 +34,8 @@ create table if not exists public.settings (
 insert into public.settings (id) values (1) on conflict (id) do nothing;
 alter table public.settings add column if not exists status_message text;
 alter table public.settings add column if not exists show_notes boolean not null default true;
+alter table public.settings add column if not exists water_goal_ml int not null default 2500;
+alter table public.settings add column if not exists protein_goal_g int not null default 120;
 
 -- ─────────────────────────────────────────────────────────────
 -- Ürünler: barkod önbelleği + kendi eklediğin ürünler + temel besinler
@@ -129,6 +131,17 @@ create table if not exists public.manual_day_totals (
 );
 
 -- ─────────────────────────────────────────────────────────────
+-- Su (her kayıt bir bardak/şişe)
+-- ─────────────────────────────────────────────────────────────
+create table if not exists public.water_logs (
+  id bigint generated always as identity primary key,
+  log_date date not null,
+  ml int not null check (ml > 0 and ml <= 5000),
+  created_at timestamptz not null default now()
+);
+create index if not exists water_logs_date_idx on public.water_logs (log_date);
+
+-- ─────────────────────────────────────────────────────────────
 -- Ziyaretçi notları ve motivasyon tıklamaları (üyeliksiz)
 -- Yazma sadece sunucu üzerinden (/api/notes, /api/motivate) yapılır.
 -- ─────────────────────────────────────────────────────────────
@@ -187,7 +200,8 @@ select
   w.kg,
   coalesce(a.total_estimated, false) as total_estimated,
   mt.total_kcal as manual_total_kcal,
-  mb.kcal as extra_kcal
+  mb.kcal as extra_kcal,
+  coalesce(wl.ml, 0) as water_ml
 from (
   select log_date from public.food_logs
   union
@@ -198,6 +212,8 @@ from (
   select log_date from public.manual_burns
   union
   select log_date from public.manual_day_totals
+  union
+  select log_date from public.water_logs
 ) d
 left join (
   select log_date,
@@ -214,7 +230,10 @@ left join public.weights w using (log_date)
 left join public.manual_day_totals mt using (log_date)
 left join (
   select log_date, sum(kcal) as kcal from public.manual_burns group by log_date
-) mb using (log_date);
+) mb using (log_date)
+left join (
+  select log_date, sum(ml) as ml from public.water_logs group by log_date
+) wl using (log_date);
 
 -- ─────────────────────────────────────────────────────────────
 -- Yetkiler: herkes okur, sadece admin yazar
@@ -227,6 +246,7 @@ alter table public.daily_activity enable row level security;
 alter table public.weights enable row level security;
 alter table public.manual_burns enable row level security;
 alter table public.manual_day_totals enable row level security;
+alter table public.water_logs enable row level security;
 alter table public.notes enable row level security;
 alter table public.motivations enable row level security;
 
@@ -236,8 +256,8 @@ grant select on public.settings, public.products, public.food_logs,
 grant insert, update, delete on public.settings, public.products, public.food_logs,
   public.daily_activity, public.weights to authenticated;
 grant select on public.admins to authenticated;
-grant select on public.manual_burns, public.manual_day_totals to anon, authenticated;
-grant insert, update, delete on public.manual_burns, public.manual_day_totals to authenticated;
+grant select on public.manual_burns, public.manual_day_totals, public.water_logs to anon, authenticated;
+grant insert, update, delete on public.manual_burns, public.manual_day_totals, public.water_logs to authenticated;
 -- Notlar: ziyaretçiler ip_hash kolonunu göremez
 grant select (id, name, message, hidden, created_at) on public.notes to anon;
 grant select, update, delete on public.notes to authenticated;
@@ -252,7 +272,7 @@ grant usage, select on all sequences in schema public to authenticated;
 do $$
 declare t text;
 begin
-  foreach t in array array['settings', 'products', 'food_logs', 'daily_activity', 'weights', 'manual_burns', 'manual_day_totals'] loop
+  foreach t in array array['settings', 'products', 'food_logs', 'daily_activity', 'weights', 'manual_burns', 'manual_day_totals', 'water_logs'] loop
     execute format('drop policy if exists "herkes okur" on public.%I', t);
     execute format('create policy "herkes okur" on public.%I for select using (true)', t);
     execute format('drop policy if exists "admin yazar" on public.%I', t);

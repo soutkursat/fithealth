@@ -1,0 +1,66 @@
+name: Veri yedeği
+
+on:
+  schedule:
+    # Her pazar 03:17 (UTC) — Türkiye saatiyle 06:17
+    - cron: "17 3 * * 0"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: yedek
+  cancel-in-progress: false
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      BACKUP_PASSWORD: ${{ secrets.BACKUP_PASSWORD }}
+      GH_TOKEN: ${{ github.token }}
+      KEEP: "26" # son 26 yedek (~6 ay) saklanır
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Ayarları kontrol et
+        run: |
+          missing=""
+          [ -z "$SUPABASE_URL" ] && missing="$missing SUPABASE_URL"
+          [ -z "$SUPABASE_SERVICE_ROLE_KEY" ] && missing="$missing SUPABASE_SERVICE_ROLE_KEY"
+          [ -z "$BACKUP_PASSWORD" ] && missing="$missing BACKUP_PASSWORD"
+          if [ -n "$missing" ]; then
+            echo "::error::Eksik GitHub Secrets:$missing (README → Yedekleme)"
+            exit 1
+          fi
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Yedek al ve şifrele
+        run: |
+          name="yedek-$(date -u +%Y-%m-%d).json.gz.enc"
+          node scripts/yedek/yedekle.mjs > yedek.json
+          gzip -9 yedek.json
+          openssl enc -aes-256-cbc -pbkdf2 -iter 200000 -salt -pass env:BACKUP_PASSWORD -in yedek.json.gz -out "$name"
+          rm -f yedek.json.gz
+          # Doğrulama: aynı parolayla geri çözülebiliyor mu?
+          openssl enc -d -aes-256-cbc -pbkdf2 -iter 200000 -pass env:BACKUP_PASSWORD -in "$name" | gunzip | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{const b=JSON.parse(s);console.log("Doğrulandı:",Object.entries(b.tables).map(([t,r])=>t+"="+r.length).join(" "))})'
+          echo "NAME=$name" >> "$GITHUB_ENV"
+
+      - name: Releases'a yükle
+        run: |
+          if ! gh release view yedekler >/dev/null 2>&1; then
+            gh release create yedekler --title "Veri yedekleri" --latest=false \
+              --notes "Haftalık şifreli veri yedekleri. Çözme ve geri yükleme: scripts/yedek/README.md"
+          fi
+          gh release upload yedekler "$NAME" --clobber
+
+      - name: Eski yedekleri temizle
+        run: |
+          gh release view yedekler --json assets --jq '.assets | sort_by(.createdAt) | reverse | .[].name' \
+            | tail -n +$((KEEP + 1)) \
+            | while read -r old; do gh release delete-asset yedekler "$old" --yes; done
