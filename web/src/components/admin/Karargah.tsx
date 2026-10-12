@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AngryWolf } from "@/components/AngryWolf";
 import { WolfMark } from "@/components/Wolf";
 import { formatDateTime } from "@/lib/dates";
 import { num1 } from "@/lib/format";
 import { btnPrimary, inputCls, useAdmin } from "./context";
 import type { Inbox } from "./MotivationPopup";
+import { BackupStatus } from "./BackupStatus";
 
 type NoteRow = { id: number; name: string; message: string; hidden: boolean; read_at: string | null; created_at: string };
 type Goals = { target_weight: string; daily_kcal_goal: string; status_message: string; water_goal_ml: string; protein_goal_g: string };
@@ -20,6 +21,8 @@ export function Karargah({ inbox, onInboxChange }: { inbox: Inbox; onInboxChange
   const [current, setCurrent] = useState<number | null>(null);
   const [goals, setGoals] = useState<Goals>({ target_weight: "", daily_kcal_goal: "", status_message: "", water_goal_ml: "", protein_goal_g: "" });
   const [filter, setFilter] = useState<"hepsi" | "yeni">("yeni");
+  /** Hedef formu sadece ilk açılışta doldurulur; sonraki yenilemeler yazılanı ezmez. */
+  const goalsLoaded = useRef(false);
 
   useEffect(() => {
     let alive = true;
@@ -34,7 +37,8 @@ export function Karargah({ inbox, onInboxChange }: { inbox: Inbox; onInboxChange
       setCounts({ today: Number(d.today ?? 0), total: Number(d.total ?? 0) });
       setNotes((n.data ?? []) as NoteRow[]);
       setCurrent(w.data?.kg != null ? Number(w.data.kg) : null);
-      if (s.data) {
+      if (s.data && !goalsLoaded.current) {
+        goalsLoaded.current = true;
         setGoals({
           target_weight: s.data.target_weight == null ? "" : String(s.data.target_weight),
           daily_kcal_goal: String(s.data.daily_kcal_goal ?? ""),
@@ -173,6 +177,8 @@ export function Karargah({ inbox, onInboxChange }: { inbox: Inbox; onInboxChange
         <button type="button" onClick={() => goTo("kilo")} className="card py-3">⚖️<br />Kilo gir</button>
         <button type="button" onClick={() => goTo("gun")} className="card py-3">🔥<br />Yakılan kalori</button>
       </div>
+
+      <BackupStatus />
 
       {/* Notlar */}
       <section className="card overflow-hidden">

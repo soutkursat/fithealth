@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { burn } from "@/lib/calc";
 import { kcal } from "@/lib/format";
 import { btnGhost, btnPrimary, inputCls, useAdmin } from "./context";
@@ -25,6 +25,8 @@ export function BurnSection() {
   const [totalInput, setTotalInput] = useState("");
   const [extraKcal, setExtraKcal] = useState("");
   const [extraNote, setExtraNote] = useState("");
+  /** Kutudaki toplam sadece gün değişince veritabanından doldurulur (yazılanı ezmesin). */
+  const loadedDate = useRef<string | null>(null);
 
   useEffect(() => {
     let alive = true;
@@ -47,7 +49,10 @@ export function BurnSection() {
       );
       const mt = t.data?.total_kcal == null ? null : Number(t.data.total_kcal);
       setManualTotal(mt);
-      setTotalInput(mt == null ? "" : String(mt));
+      if (loadedDate.current !== date) {
+        loadedDate.current = date;
+        setTotalInput(mt == null ? "" : String(mt));
+      }
       setExtras((e.data ?? []).map((x) => ({ ...x, kcal: Number(x.kcal) })) as Extra[]);
     });
     return () => {

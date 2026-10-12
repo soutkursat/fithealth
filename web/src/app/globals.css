@@ -68,6 +68,12 @@ html {
   background: var(--page);
 }
 
+/* Sallanma/yakınlaşma efektleri yatay kaydırma çubuğu çıkarmasın. */
+html,
+body {
+  overflow-x: clip;
+}
+
 body {
   background: var(--page);
   color: var(--ink);

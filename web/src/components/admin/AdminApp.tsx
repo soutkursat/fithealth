@@ -23,6 +23,8 @@ const TABS: { key: Tab; label: string; icon: string }[] = [
 ];
 
 const SEEN_KEY = "kurt-motivasyon-goruldu";
+/** Açılır pencerede gösterilmiş en yeni notun kimliği. */
+const NOTE_SEEN_KEY = "kurt-not-goruldu";
 const POLL_MS = 30_000;
 
 export function AdminApp() {
@@ -40,6 +42,14 @@ function readSeen(): string {
   }
 }
 
+function readNoteSeen(): number {
+  try {
+    return Number(localStorage.getItem(NOTE_SEEN_KEY) ?? 0) || 0;
+  } catch {
+    return 0;
+  }
+}
+
 function AdminInner() {
   const supabase = useMemo(() => getBrowserClient(), []);
   const [session, setSession] = useState<Session | null | undefined>(undefined);
@@ -51,7 +61,8 @@ function AdminInner() {
   const [toastMsg, setToastMsg] = useState<{ msg: string; kind: "ok" | "err" } | null>(null);
   const [inbox, setInbox] = useState<Inbox>({ unreadNotes: [], unreadCount: 0, newMotivations: 0 });
   const [popup, setPopup] = useState(false);
-  const notified = useRef(0);
+  /** Bu oturumda pencereyle bildirilmiş motivasyon sayısı. */
+  const notifiedMot = useRef(0);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => setSession(data.session));
@@ -95,9 +106,13 @@ function AdminInner() {
     };
     setInbox(next);
     setToday(isoDate());
-    const signal = next.newMotivations + next.unreadCount;
-    if (signal > notified.current) {
-      notified.current = signal;
+    // Sadece YENİ bir şey varsa pencere aç: görülmemiş motivasyon ya da
+    // daha önce pencerede gösterilmemiş bir not.
+    const newestNote = next.unreadNotes[0]?.id ?? 0;
+    const freshNote = newestNote > readNoteSeen();
+    const freshMot = next.newMotivations > notifiedMot.current;
+    if (freshNote || freshMot) {
+      notifiedMot.current = next.newMotivations;
       setPopup(true);
     }
   }, [supabase]);
@@ -118,10 +133,12 @@ function AdminInner() {
   function dismissPopup() {
     try {
       localStorage.setItem(SEEN_KEY, new Date().toISOString());
+      const newest = inbox.unreadNotes[0]?.id;
+      if (newest) localStorage.setItem(NOTE_SEEN_KEY, String(Math.max(newest, readNoteSeen())));
     } catch {
       /* önemli değil */
     }
-    notified.current = inbox.unreadCount;
+    notifiedMot.current = 0;
     setInbox((i) => ({ ...i, newMotivations: 0 }));
     setPopup(false);
   }

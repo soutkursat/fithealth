@@ -12,12 +12,13 @@ import { api, btnGhost, btnPrimary, guessMeal, inputCls, useAdmin } from "./cont
 type BarcodeResponse = { status: "found" | "partial" | "not_found"; product: Product | null };
 type SearchResponse = { local: Product[]; external: Product[] };
 type Recent = { product: Product; grams: number | null };
+type QuickInitial = { name: string; kcal: number | null; protein?: number | null; carbs?: number | null; fat?: number | null };
 
 type Modal =
   | { kind: "scan" }
   | { kind: "portion"; product: Product; grams?: number }
   | { kind: "form"; initial?: Partial<Product>; notice?: string }
-  | { kind: "quick" }
+  | { kind: "quick"; initial?: QuickInitial }
   | null;
 
 const toProduct = (r: Record<string, unknown>): Product => ({
@@ -198,7 +199,21 @@ export function AddFood() {
                   key={`${r.product.name}|${r.product.brand ?? ""}`}
                   type="button"
                   className="max-w-full truncate rounded-full border border-line bg-surface px-3 py-1.5 text-sm hover:bg-surface-2"
-                  onClick={() => setModal({ kind: "portion", product: r.product, grams: r.grams ?? 100 })}
+                  onClick={() =>
+                    r.grams == null
+                      ? // Gramajsız (hızlı) kayıt: aynı değerlerle hızlı kalori formunu aç
+                        setModal({
+                          kind: "quick",
+                          initial: {
+                            name: r.product.name,
+                            kcal: r.product.kcal_100g,
+                            protein: r.product.protein_100g,
+                            carbs: r.product.carbs_100g,
+                            fat: r.product.fat_100g,
+                          },
+                        })
+                      : setModal({ kind: "portion", product: r.product, grams: r.grams })
+                  }
                 >
                   {r.product.name}
                   {r.grams != null && <span className="text-muted"> · {r.grams} g</span>}
@@ -237,20 +252,21 @@ export function AddFood() {
           onCancel={() => setModal(null)}
         />
       )}
-      {modal?.kind === "quick" && <QuickAdd meal={meal} onClose={() => setModal(null)} />}
+      {modal?.kind === "quick" && <QuickAdd meal={meal} initial={modal.initial} onClose={() => setModal(null)} />}
     </div>
   );
 }
 
 /** Restoran yemeği vb.: sadece isim + toplam kalori. */
-function QuickAdd({ meal: initialMeal, onClose }: { meal: Meal; onClose: () => void }) {
+function QuickAdd({ meal: initialMeal, initial, onClose }: { meal: Meal; initial?: QuickInitial; onClose: () => void }) {
+  const str = (v: number | null | undefined) => (v == null ? "" : String(v));
   const { supabase, date, toast, bump } = useAdmin();
   const [meal, setMeal] = useState(initialMeal);
-  const [name, setName] = useState("");
-  const [cal, setCal] = useState("");
-  const [p, setP] = useState("");
-  const [c, setC] = useState("");
-  const [f, setF] = useState("");
+  const [name, setName] = useState(initial?.name ?? "");
+  const [cal, setCal] = useState(str(initial?.kcal));
+  const [p, setP] = useState(str(initial?.protein));
+  const [c, setC] = useState(str(initial?.carbs));
+  const [f, setF] = useState(str(initial?.fat));
   const [saving, setSaving] = useState(false);
   const num = (s: string) => {
     const v = Number.parseFloat(s.replace(",", "."));

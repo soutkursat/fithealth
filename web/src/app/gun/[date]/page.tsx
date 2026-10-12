@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { WolfMark } from "@/components/Wolf";
 import { SiteFooter, SiteHeader } from "@/components/SiteHeader";
 import { StatTile } from "@/components/StatTile";
 import { MacroBar } from "@/components/MacroBar";
@@ -35,7 +35,7 @@ export default function DayPage({ params }: PageProps<"/gun/[date]">) {
 }
 
 async function Day({ date }: { date: string }) {
-  if (!isValidIsoDate(date)) notFound();
+  if (!isValidIsoDate(date)) return <LostDay />;
   const { settings, logs, summary } = await getDay(date);
   const b = balance(summary);
   const bu = burn(summary);
@@ -78,6 +78,17 @@ async function Day({ date }: { date: string }) {
         </div>
       )}
       <MealList logs={logs} emptyText="Bu gün sofraya bir şey kaydedilmemiş." />
+    </div>
+  );
+}
+
+function LostDay() {
+  return (
+    <div className="glass mx-auto my-10 flex max-w-md flex-col items-center gap-3 p-8 text-center">
+      <WolfMark className="h-20 w-auto opacity-80" glow />
+      <h1 className="text-xl font-bold">Böyle bir gün yok</h1>
+      <p className="text-sm text-ink-2">Bozkurt takvimde kayboldu. Tarih yanlış yazılmış olabilir.</p>
+      <Link href="/" className="rounded-full border border-line px-4 py-2 text-sm font-semibold text-accent hover:bg-white/5">Bugüne dön →</Link>
     </div>
   );
 }
