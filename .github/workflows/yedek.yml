@@ -23,7 +23,7 @@ jobs:
       GH_TOKEN: ${{ github.token }}
       KEEP: "26" # son 26 yedek (~6 ay) saklanır
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Ayarları kontrol et
         id: check
@@ -50,7 +50,7 @@ jobs:
           # Zamanlanmış çalışmada her hafta hata e-postası gitmesin: uyar ve geç.
           echo "::warning::Yedekleme kurulmadığı için atlandı. Eksik:$missing"
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         if: steps.check.outputs.ready == 'true'
         with:
           node-version: 22

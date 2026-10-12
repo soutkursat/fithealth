@@ -39,7 +39,15 @@ async function fetchAll(table) {
     const res = await fetch(`${url}/rest/v1/${table}?select=*&order=${ORDER_BY[table] ?? "id"}`, {
       headers: { apikey: key, Authorization: `Bearer ${key}`, Range: `${from}-${from + PAGE - 1}`, "Range-Unit": "items" },
     });
-    if (!res.ok) throw new Error(`${table}: HTTP ${res.status} ${await res.text()}`);
+    if (!res.ok) {
+      const body = await res.text();
+      // Tablo henüz oluşturulmamışsa (schema.sql eski) yedeği iptal etme, atla.
+      if (res.status === 404 || /PGRST205|42P01/.test(body)) {
+        console.error(`::warning::${table} tablosu veritabanında yok, atlandı. supabase/schema.sql dosyasını Supabase'de tekrar çalıştır.`);
+        return null;
+      }
+      throw new Error(`${table}: HTTP ${res.status} ${body}`);
+    }
     const page = await res.json();
     rows.push(...page);
     if (page.length < PAGE) break;
@@ -49,8 +57,15 @@ async function fetchAll(table) {
 }
 
 const backup = { app: "kurt-giderek-azaliyor", version: 1, created_at: new Date().toISOString(), tables: {} };
+const skipped = [];
 for (const t of TABLES) {
-  backup.tables[t] = await fetchAll(t);
-  console.error(`${t}: ${backup.tables[t].length} satır`);
+  const rows = await fetchAll(t);
+  if (rows === null) {
+    skipped.push(t);
+    continue;
+  }
+  backup.tables[t] = rows;
+  console.error(`${t}: ${rows.length} satır`);
 }
+if (skipped.length) backup.skipped = skipped;
 process.stdout.write(JSON.stringify(backup));
